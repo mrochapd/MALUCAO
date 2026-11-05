@@ -1,0 +1,26 @@
+{# Seleção encadeada: evento → pacote → modalidades. Opções vêm de "opcoes_eventos" (somente itens vinculados ao evento). #}
+<div data-inscricao data-prefixo="{{ form_inscricao.prefix|default:'' }}">
+  {{ form_inscricao.non_field_errors }}
+  <div class="mb-3 {% if form_inscricao.evento.errors %}campo-erro{% endif %}">
+    <label class="form-label" for="{{ form_inscricao.evento.id_for_label }}"><span class="passo">1</span>Evento{% if form_inscricao.evento.field.required %} <span class="text-danger">*</span>{% endif %}</label>
+    {{ form_inscricao.evento }}
+    {{ form_inscricao.evento.errors }}
+    <div class="alert alert-warning small py-2 mt-2 mb-0" data-aviso-evento hidden><i class="bi bi-exclamation-triangle"></i> <span></span>
+      {% if perms.atletas.inscrever_fora_do_periodo %} Seu perfil pode registrar mesmo assim.{% endif %}</div>
+  </div>
+  <div class="mb-3 {% if form_inscricao.pacote.errors %}campo-erro{% endif %}" data-depende-evento hidden>
+    <span class="form-label d-block"><span class="passo">2</span>Pacote adquirido <span class="text-danger">*</span></span>
+    <div data-pacotes></div>
+    {{ form_inscricao.pacote.errors }}
+  </div>
+  <div class="mb-3 {% if form_inscricao.modalidades.errors %}campo-erro{% endif %}" data-depende-evento hidden>
+    <span class="form-label d-block"><span class="passo">3</span>Modalidades em que irá participar <span class="text-danger">*</span></span>
+    <div data-modalidades></div>
+    <div class="form-text" data-regra></div>
+    {{ form_inscricao.modalidades.errors }}
+  </div>
+  <div data-depende-evento hidden>{% include "includes/campo.html" with campo=form_inscricao.observacoes %}</div>
+</div>
+{{ opcoes_eventos|json_script:"opcoes-eventos" }}
+{{ modalidades_selecionadas|json_script:"modalidades-selecionadas" }}
+{{ pacote_selecionado|json_script:"pacote-selecionado" }}

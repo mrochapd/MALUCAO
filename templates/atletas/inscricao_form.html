@@ -1,0 +1,17 @@
+{% extends "base.html" %}{% load malucao %}
+{% block titulo %}{% if inscricao %}Editar inscrição{% else %}Nova inscrição{% endif %}{% endblock %}
+{% block conteudo %}
+<div class="cabecalho"><div>
+  <nav class="breadcrumb"><a href="{% url 'atletas:lista' %}">Atletas</a>&nbsp;/&nbsp;<a href="{{ atleta.get_absolute_url }}">{{ atleta }}</a></nav>
+  <h1>{% if inscricao %}Editar inscrição{% else %}Nova inscrição{% endif %}</h1>
+  <p class="sub">{{ atleta.nome }} · <span class="cpf">{% cpf atleta %}</span></p>
+</div></div>
+<form method="post" class="card" novalidate>{% csrf_token %}
+  <div class="card-body">{% include "atletas/_inscricao_campos.html" %}</div>
+  <div class="card-footer bg-transparent d-flex gap-2 py-3">
+    <button class="btn btn-primary"><i class="bi bi-check-lg"></i> Salvar inscrição</button>
+    <a class="btn btn-outline-secondary" href="{{ atleta.get_absolute_url }}">Cancelar</a>
+    {% if inscricao and perms.atletas.delete_inscricao %}<a class="btn btn-outline-danger ms-auto" href="{% url 'atletas:inscricao_excluir' inscricao.pk %}"><i class="bi bi-trash"></i> Excluir inscrição</a>{% endif %}
+  </div>
+</form>
+{% endblock %}

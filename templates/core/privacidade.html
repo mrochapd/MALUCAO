@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block titulo %}Privacidade e LGPD{% endblock %}
+{% block conteudo %}
+<div class="cabecalho"><div><h1>Privacidade e LGPD</h1><p class="sub">Como este sistema protege os dados pessoais dos atletas (Lei 13.709/2018).</p></div></div>
+<div class="row g-3">
+  <div class="col-lg-6"><div class="card h-100"><div class="card-header">Dados tratados e finalidade</div><div class="card-body">
+    <p>São coletados apenas os dados necessários à organização dos eventos: <strong>nome completo, CPF, e-mail</strong> e, opcionalmente, telefone.
+    A finalidade é identificar o atleta, evitar inscrições duplicadas, controlar pacotes e modalidades e comunicar informações do evento.</p>
+    <p class="mb-0">O registro do <strong>consentimento</strong> do atleta (com data) fica no cadastro de cada um.</p>
+  </div></div></div>
+  <div class="col-lg-6"><div class="card h-100"><div class="card-header">Medidas de segurança</div><div class="card-body">
+    <ul class="mb-0">
+      <li>Acesso somente com login e senha; bloqueio após tentativas incorretas.</li>
+      <li>Perfis de permissão: o CPF completo só é exibido para perfis autorizados — os demais veem <code>***.456.789-**</code>.</li>
+      <li>Registro de alterações (quem, quando, o quê e IP), inclusive exportações de relatórios.</li>
+      <li>Sessão expira por inatividade; cookies protegidos e HTTPS em produção.</li>
+      <li>Backups periódicos do banco de dados com retenção limitada.</li>
+    </ul>
+  </div></div></div>
+  <div class="col-12"><div class="card"><div class="card-header">Direitos do titular</div><div class="card-body">
+    <p>O atleta pode solicitar <strong>acesso, correção ou exclusão</strong> dos seus dados a qualquer momento:</p>
+    <ul class="mb-0">
+      <li><strong>Acesso/portabilidade:</strong> abra o cadastro do atleta e use os relatórios filtrados para gerar a relação dos seus dados.</li>
+      <li><strong>Correção:</strong> botão “Editar dados” no cadastro do atleta.</li>
+      <li><strong>Eliminação:</strong> botão “Excluir” no cadastro do atleta — remove o atleta e todas as suas inscrições (a exclusão fica registrada na auditoria, sem o CPF completo).</li>
+    </ul>
+  </div></div></div>
+</div>
+{% endblock %}

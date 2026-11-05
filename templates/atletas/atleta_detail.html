@@ -1,0 +1,67 @@
+{% extends "base.html" %}{% load malucao %}
+{% block titulo %}{{ object }}{% endblock %}
+{% block conteudo %}
+<div class="cabecalho">
+  <div>
+    <nav class="breadcrumb"><a href="{% url 'atletas:lista' %}">Atletas</a></nav>
+    <h1>{{ object.nome }}</h1>
+    <p class="sub">Cadastrado em {{ object.criado_em|date:"d/m/Y H:i" }}</p>
+  </div>
+  <div class="acoes">
+    {% if perms.atletas.add_inscricao %}<a class="btn btn-primary" href="{% url 'atletas:inscricao_nova' object.pk %}"><i class="bi bi-plus-lg"></i> Nova inscrição</a>{% endif %}
+    {% if perms.atletas.change_atleta %}<a class="btn btn-dark" href="{% url 'atletas:editar' object.pk %}"><i class="bi bi-pencil"></i> Editar dados</a>{% endif %}
+  </div>
+</div>
+<div class="row g-3">
+  <div class="col-lg-4">
+    <div class="card mb-3"><div class="card-header">Dados pessoais</div><div class="card-body">
+      <dl class="lista-info">
+        <dt>CPF</dt><dd class="cpf">{% cpf object %}</dd>
+        <dt>E-mail</dt><dd class="text-break">{{ object.email }}</dd>
+        <dt>Telefone</dt><dd>{{ object.telefone|default:"—" }}</dd>
+        <dt>LGPD</dt><dd>{% if object.consentimento_lgpd %}<span class="text-success"><i class="bi bi-check-circle-fill"></i> Consentimento em {{ object.consentimento_em|date:"d/m/Y" }}</span>{% else %}<span class="text-danger"><i class="bi bi-exclamation-circle"></i> Sem consentimento registrado</span>{% endif %}</dd>
+      </dl>
+      {% if object.observacoes %}<hr><p class="small mb-0">{{ object.observacoes|linebreaksbr }}</p>{% endif %}
+    </div></div>
+    {% if perms.atletas.delete_atleta %}
+    <a class="btn btn-sm btn-outline-danger" href="{% url 'atletas:excluir' object.pk %}"><i class="bi bi-trash"></i> Excluir atleta (direito de eliminação — LGPD)</a>
+    {% endif %}
+  </div>
+  <div class="col-lg-8">
+    <div class="card mb-3"><div class="card-header">Histórico de inscrições <span class="badge text-bg-dark">{{ inscricoes|length }}</span></div>
+      <div class="card-body">
+      {% for i in inscricoes %}
+        <div class="border rounded-3 p-3 mb-2">
+          <div class="d-flex flex-wrap justify-content-between gap-2">
+            <div>
+              <a href="{{ i.evento.get_absolute_url }}" class="fw-bold text-reset fs-5">{{ i.evento }}</a>
+              <span class="badge text-bg-{{ i.evento.status_cor }} ms-1">{{ i.evento.get_status_display }}</span>
+              <div class="small text-muted">Inscrito em {{ i.criado_em|date:"d/m/Y H:i" }}{% if i.atualizado_em|date:"YmdHi" != i.criado_em|date:"YmdHi" %} · atualizado em {{ i.atualizado_em|date:"d/m/Y H:i" }}{% endif %}</div>
+            </div>
+            <div class="text-nowrap">
+              {% if perms.atletas.change_inscricao %}<a class="btn btn-sm btn-outline-secondary" href="{% url 'atletas:inscricao_editar' i.pk %}"><i class="bi bi-pencil"></i> Editar</a>{% endif %}
+              {% if perms.atletas.delete_inscricao %}<a class="btn btn-sm btn-outline-danger" href="{% url 'atletas:inscricao_excluir' i.pk %}" aria-label="Excluir inscrição"><i class="bi bi-trash"></i></a>{% endif %}
+            </div>
+          </div>
+          <div class="mt-2"><span class="chip vermelho">{{ i.pacote.nome }} · {{ i.pacote.valor|brl }}</span>
+            {% for m in i.modalidades.all %}<span class="chip">{{ m.nome }}</span>{% empty %}<span class="text-muted small">Nenhuma modalidade</span>{% endfor %}</div>
+          {% if i.observacoes %}<p class="small text-muted mb-0 mt-2">{{ i.observacoes }}</p>{% endif %}
+        </div>
+      {% empty %}
+        <div class="vazio"><i class="bi bi-inbox"></i>Este atleta ainda não está inscrito em nenhum evento.</div>
+      {% endfor %}
+      </div>
+    </div>
+    {% if historico is not None %}
+    <div class="card"><div class="card-header">Registro de alterações</div><div class="card-body">
+      <ul class="linha-tempo">
+      {% for r in historico %}
+        <li><div class="small"><strong>{{ r.get_acao_display }}</strong> · {{ r.entidade }} · {{ r.momento|date:"d/m/Y H:i" }} por {{ r.usuario|default:"Sistema" }}</div>
+          <div class="diff">{% include "core/_diff.html" %}</div></li>
+      {% empty %}<li class="text-muted small">Sem registros.</li>{% endfor %}
+      </ul>
+    </div></div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,74 @@
+{% load static malucao %}<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>{% block titulo %}Painel{% endblock %} · {{ SISTEMA_NOME }}</title>
+  <link rel="icon" href="{% static 'img/favicon-64.png' %}">
+  <link href="{% static 'vendor/fonts/fonts.css' %}" rel="stylesheet">
+  <link href="{% static 'vendor/bootstrap/bootstrap.min.css' %}" rel="stylesheet">
+  <link href="{% static 'vendor/bootstrap-icons/bootstrap-icons.min.css' %}" rel="stylesheet">
+  <link href="{% static 'css/app.css' %}" rel="stylesheet">
+  {% block head %}{% endblock %}
+</head>
+<body>
+{% block corpo %}
+  <aside class="sidebar" aria-label="Menu principal">
+    <div class="marca">
+      <a href="{% url 'core:dashboard' %}"><img src="{% static 'img/logo-wordmark.png' %}" alt="Malucão — Atlética das Engenharias AAAE IFMG GV"></a>
+    </div>
+    <nav>
+      <a class="nav-link {% menu_ativo '/' %}" href="{% url 'core:dashboard' %}"><i class="bi bi-speedometer2"></i> Painel</a>
+      <div class="secao">Cadastros</div>
+      {% if perms.atletas.view_atleta %}<a class="nav-link {% menu_ativo '/atletas/' %}" href="{% url 'atletas:lista' %}"><i class="bi bi-people-fill"></i> Atletas</a>{% endif %}
+      {% if perms.eventos.view_evento %}<a class="nav-link {% menu_ativo '/eventos/' '!/eventos/modalidades/' '!/eventos/pacotes/' %}" href="{% url 'eventos:eventos' %}"><i class="bi bi-trophy-fill"></i> Eventos</a>{% endif %}
+      {% if perms.eventos.view_modalidade %}<a class="nav-link {% menu_ativo '/eventos/modalidades/' %}" href="{% url 'eventos:modalidades' %}"><i class="bi bi-dribbble"></i> Modalidades</a>{% endif %}
+      {% if perms.eventos.view_pacote %}<a class="nav-link {% menu_ativo '/eventos/pacotes/' %}" href="{% url 'eventos:pacotes' %}"><i class="bi bi-box-seam-fill"></i> Pacotes</a>{% endif %}
+      {% if perms.core.ver_relatorios %}
+      <div class="secao">Consultas</div>
+      <a class="nav-link {% menu_ativo '/relatorios/' %}" href="{% url 'relatorios:index' %}"><i class="bi bi-file-earmark-bar-graph-fill"></i> Relatórios</a>
+      {% endif %}
+      {% if perms.core.ver_auditoria or perms.core.gerenciar_usuarios %}
+      <div class="secao">Administração</div>
+      {% if perms.core.gerenciar_usuarios %}<a class="nav-link {% menu_ativo '/usuarios/' %}" href="{% url 'core:usuarios' %}"><i class="bi bi-person-gear"></i> Usuários</a>{% endif %}
+      {% if perms.core.ver_auditoria %}<a class="nav-link {% menu_ativo '/auditoria/' %}" href="{% url 'core:auditoria' %}"><i class="bi bi-clock-history"></i> Registro de alterações</a>{% endif %}
+      {% endif %}
+      <a class="nav-link {% menu_ativo '/privacidade/' %}" href="{% url 'core:privacidade' %}"><i class="bi bi-shield-lock"></i> Privacidade (LGPD)</a>
+    </nav>
+    <div class="rodape d-flex align-items-center gap-2">
+      <span class="avatar">{{ user|iniciais }}</span>
+      <div class="flex-grow-1 text-truncate">
+        <div class="text-white text-truncate">{{ user.get_full_name|default:user.username }}</div>
+        <a href="{% url 'password_change' %}" class="link-light link-opacity-50 small text-decoration-none">Alterar senha</a>
+      </div>
+      <form method="post" action="{% url 'logout' %}">{% csrf_token %}
+        <button class="btn btn-sm btn-outline-light" title="Sair" aria-label="Sair"><i class="bi bi-box-arrow-right"></i></button>
+      </form>
+    </div>
+  </aside>
+  <div class="sidebar-fundo"></div>
+
+  <div class="conteudo">
+    <header class="topo-mobile">
+      <a href="{% url 'core:dashboard' %}"><img src="{% static 'img/logo-wordmark.png' %}" alt="Malucão"></a>
+      <button class="btn btn-outline-light btn-sm" data-abrir-menu aria-label="Abrir menu"><i class="bi bi-list fs-5"></i></button>
+    </header>
+    <main class="pagina">
+      {% if messages %}
+        {% for m in messages %}
+        <div class="alert alert-{% if m.tags == 'error' %}danger{% else %}{{ m.tags }}{% endif %} alert-dismissible fade show" role="alert">
+          {{ m }}<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+        </div>
+        {% endfor %}
+      {% endif %}
+      {% block conteudo %}{% endblock %}
+    </main>
+    <footer class="rodape-app">{{ SISTEMA_ORGANIZACAO }} · Dados pessoais tratados conforme a LGPD (Lei 13.709/2018)</footer>
+  </div>
+{% endblock %}
+<script src="{% static 'vendor/bootstrap/bootstrap.bundle.min.js' %}"></script>
+<script src="{% static 'js/app.js' %}"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

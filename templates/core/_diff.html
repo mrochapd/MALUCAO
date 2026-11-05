@@ -1,0 +1,12 @@
+{% if r.acao == "alteracao" %}
+  {% for campo, v in r.alteracoes.items %}
+    <div><strong>{{ campo }}</strong>:
+      {% if v.de is not None or v.para is not None %}<code>{{ v.de|default:"—" }}</code> → <code>{{ v.para|default:"—" }}</code>
+      {% else %}{% for k, itens in v.items %}{{ k }} <code>{% if itens|stringformat:"s" == itens %}{{ itens }}{% else %}{{ itens|join:", " }}{% endif %}</code>{% endfor %}{% endif %}
+    </div>
+  {% endfor %}
+{% elif r.acao == "exportacao" or r.acao == "acesso" %}
+  {% for k, v in r.alteracoes.items %}<div>{{ k }}: <code>{{ v }}</code></div>{% endfor %}
+{% elif r.acao == "criacao" %}<span>Novo registro</span>
+{% elif r.acao == "exclusao" %}<span>Registro removido</span>
+{% endif %}

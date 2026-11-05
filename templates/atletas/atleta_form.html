@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block titulo %}{% if object %}Editar atleta{% else %}Cadastrar atleta{% endif %}{% endblock %}
+{% block conteudo %}
+<div class="cabecalho"><div>
+  <nav class="breadcrumb"><a href="{% url 'atletas:lista' %}">Atletas</a>{% if object %}&nbsp;/&nbsp;<a href="{{ object.get_absolute_url }}">{{ object }}</a>{% endif %}</nav>
+  <h1>{% if object %}Editar dados do atleta{% else %}Cadastrar atleta{% endif %}</h1>
+  {% if not object %}<p class="sub">Preencha os dados pessoais e, em seguida, escolha o evento, o pacote e as modalidades.</p>{% endif %}
+</div></div>
+
+{% if atleta_existente %}
+<div class="alert alert-warning d-flex flex-wrap justify-content-between align-items-center gap-2">
+  <span><i class="bi bi-person-exclamation"></i> CPF já cadastrado para <strong>{{ atleta_existente.nome }}</strong>.</span>
+  <span><a class="btn btn-sm btn-dark" href="{{ atleta_existente.get_absolute_url }}">Abrir cadastro</a>
+  <a class="btn btn-sm btn-primary" href="{% url 'atletas:inscricao_nova' atleta_existente.pk %}">Adicionar inscrição</a></span>
+</div>
+{% endif %}
+
+<form method="post" class="card" novalidate>{% csrf_token %}
+  <div class="card-body">
+    {{ form.non_field_errors }}
+    <h2 class="h5 text-uppercase mb-3">Dados pessoais</h2>
+    <div class="row">
+      <div class="col-md-8">{% include "includes/campo.html" with campo=form.nome %}</div>
+      <div class="col-md-4 {% if form.cpf.errors %}campo-erro{% endif %} mb-3">
+        <label class="form-label" for="{{ form.cpf.id_for_label }}">CPF <span class="text-danger">*</span></label>
+        <input type="text" name="{{ form.cpf.html_name }}" id="{{ form.cpf.id_for_label }}" class="form-control cpf"
+               value="{{ form.cpf.value|default:'' }}" inputmode="numeric" maxlength="14" placeholder="000.000.000-00" required
+               data-mascara="cpf" data-verificar="{% url 'atletas:verificar_cpf' %}" {% if object %}data-excluir="{{ object.pk }}"{% endif %}>
+        <div class="invalid-feedback">CPF inválido ou já cadastrado.</div>
+        {{ form.cpf.errors }}
+      </div>
+      <div class="col-12 alerta-cpf">
+        <div class="alert alert-warning py-2 d-flex flex-wrap gap-2 justify-content-between align-items-center">
+          <span><i class="bi bi-person-exclamation"></i> Este CPF já pertence a <strong data-nome></strong>. Não crie um cadastro duplicado.</span>
+          <span><a data-link class="btn btn-sm btn-dark" href="#">Abrir cadastro</a> <a data-link-inscricao class="btn btn-sm btn-primary" href="#">Adicionar inscrição</a></span>
+        </div>
+      </div>
+      <div class="col-md-6">{% include "includes/campo.html" with campo=form.email %}</div>
+      <div class="col-md-6">{% include "includes/campo.html" with campo=form.telefone %}</div>
+      <div class="col-12">{% include "includes/campo.html" with campo=form.observacoes %}</div>
+      <div class="col-12">
+        <div class="form-check mb-3">
+          {{ form.consentimento_lgpd }}
+          <label class="form-check-label" for="{{ form.consentimento_lgpd.id_for_label }}">Consentimento LGPD</label>
+          <div class="form-text">{{ form.consentimento_lgpd.help_text }} <a href="{% url 'core:privacidade' %}" target="_blank">Saiba mais</a>.</div>
+        </div>
+      </div>
+    </div>
+
+    {% if form_inscricao %}
+    <div class="secao-form">
+      <h2>Inscrição no evento</h2>
+      <p class="text-muted small">Somente pacotes e modalidades vinculados ao evento escolhido são exibidos.</p>
+      {% include "atletas/_inscricao_campos.html" %}
+    </div>
+    {% endif %}
+  </div>
+  <div class="card-footer bg-transparent d-flex flex-wrap gap-2 py-3">
+    <button class="btn btn-primary" name="salvar"><i class="bi bi-check-lg"></i> Salvar</button>
+    {% if not object %}<button class="btn btn-outline-primary" name="salvar_novo"><i class="bi bi-plus-lg"></i> Salvar e cadastrar outro</button>{% endif %}
+    <a class="btn btn-outline-secondary" href="{% if object %}{{ object.get_absolute_url }}{% else %}{% url 'atletas:lista' %}{% endif %}">Cancelar</a>
+  </div>
+</form>
+{% endblock %}

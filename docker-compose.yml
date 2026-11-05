@@ -1,0 +1,47 @@
+# Produção simples: aplicação + PostgreSQL + backup diário automático.
+#   cp .env.example .env   (ajuste as senhas e DJANGO_DEBUG=0)
+#   docker compose up -d --build
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: malucao
+      POSTGRES_USER: malucao
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-malucao}
+    volumes:
+      - dados_db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U malucao"]
+      interval: 5s
+      retries: 10
+
+  web:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      DATABASE_URL: postgres://malucao:${POSTGRES_PASSWORD:-malucao}@db:5432/malucao
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  backup:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      DATABASE_URL: postgres://malucao:${POSTGRES_PASSWORD:-malucao}@db:5432/malucao
+      BACKUP_DIR: /app/backups
+    volumes:
+      - ./backups:/app/backups
+    depends_on:
+      db:
+        condition: service_healthy
+    # Executa um backup a cada 24 h (pg_dump + JSON), mantendo os 14 mais recentes.
+    command: ["sh", "-c", "while true; do python manage.py backup_db; sleep 86400; done"]
+
+volumes:
+  dados_db:

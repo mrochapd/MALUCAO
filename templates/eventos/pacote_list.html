@@ -1,0 +1,32 @@
+{% extends "base.html" %}{% load malucao %}
+{% block titulo %}Pacotes{% endblock %}
+{% block conteudo %}
+<div class="cabecalho">
+  <div><h1>Pacotes</h1><p class="sub">Pacotes de inscrição de cada evento, com valores, benefícios e regras.</p></div>
+  {% if perms.eventos.add_pacote %}<div class="acoes"><a class="btn btn-primary" href="{% url 'eventos:pacote_novo' %}{% if evento_filtro %}?evento={{ evento_filtro }}{% endif %}"><i class="bi bi-plus-lg"></i> Novo pacote</a></div>{% endif %}
+</div>
+<form class="mb-3" method="get" data-autoenvio>
+  <select name="evento" class="form-select w-auto" aria-label="Filtrar por evento">
+    <option value="">Todos os eventos</option>
+    {% for e in eventos %}<option value="{{ e.pk }}" {% if evento_filtro == e.pk|stringformat:"s" %}selected{% endif %}>{{ e }}</option>{% endfor %}
+  </select>
+</form>
+<div class="card tabela-card"><div class="table-responsive">
+  <table class="table table-hover tabela-pilha">
+    <thead><tr><th>Pacote</th><th>Evento</th><th>Valor</th><th>Benefícios</th><th>Status</th><th class="text-end">Atletas</th><th></th></tr></thead>
+    <tbody>
+    {% for p in pacotes %}
+      <tr>
+        <td class="principal"><span class="fw-semibold">{{ p.nome }}</span>{% if p.descricao %}<br><small class="text-muted">{{ p.descricao|truncatechars:70 }}</small>{% endif %}</td>
+        <td data-rotulo="Evento"><a href="{{ p.evento.get_absolute_url }}" class="text-reset">{{ p.evento }}</a></td>
+        <td data-rotulo="Valor" class="text-nowrap fw-semibold">{{ p.valor|brl }}</td>
+        <td data-rotulo="Benefícios">{% for b in p.lista_beneficios|slice:":3" %}<span class="chip">{{ b|truncatechars:40 }}</span>{% endfor %}{% if p.lista_beneficios|length > 3 %}<span class="chip">+{{ p.lista_beneficios|length|add:"-3" }}</span>{% endif %}</td>
+        <td data-rotulo="Status">{% if p.ativo %}<span class="badge text-bg-success">Ativo</span>{% else %}<span class="badge text-bg-secondary">Inativo</span>{% endif %}</td>
+        <td data-rotulo="Atletas" class="text-end fw-bold">{% if perms.atletas.view_atleta %}<a href="{% url 'atletas:lista' %}?pacote={{ p.pk }}">{{ p.n_atletas }}</a>{% else %}{{ p.n_atletas }}{% endif %}</td>
+        <td class="text-end">{% if perms.eventos.change_pacote %}<a class="btn btn-sm btn-outline-secondary" href="{% url 'eventos:pacote_editar' p.pk %}" aria-label="Editar"><i class="bi bi-pencil"></i></a>{% endif %}</td>
+      </tr>
+    {% empty %}<tr><td colspan="7"><div class="vazio"><i class="bi bi-box-seam"></i>Nenhum pacote cadastrado.</div></td></tr>{% endfor %}
+    </tbody>
+  </table>
+</div></div>
+{% endblock %}

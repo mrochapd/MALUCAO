@@ -1,0 +1,110 @@
+{% extends "base.html" %}{% load malucao %}
+{% block titulo %}{{ object }}{% endblock %}
+{% block conteudo %}
+<div class="cabecalho">
+  <div>
+    <nav class="breadcrumb"><a href="{% url 'eventos:eventos' %}">Eventos</a></nav>
+    <h1>{{ object.nome }}</h1>
+    <p class="sub"><span class="badge text-bg-{{ object.status_cor }}">{{ object.get_status_display }}</span>
+      {% if object.edicao %}<span class="chip ms-1">Edição {{ object.edicao }}</span>{% endif %}</p>
+  </div>
+  <div class="acoes">
+    {% if perms.atletas.add_atleta and object.aceita_inscricoes %}<a class="btn btn-primary" href="{% url 'atletas:novo' %}"><i class="bi bi-person-plus"></i> Inscrever atleta</a>{% endif %}
+    {% if perms.atletas.view_atleta %}<a class="btn btn-outline-secondary" href="{% url 'atletas:lista' %}?evento={{ object.pk }}"><i class="bi bi-people"></i> Atletas</a>{% endif %}
+    {% if perms.core.ver_relatorios %}<a class="btn btn-outline-secondary" href="{% url 'relatorios:index' %}?evento={{ object.pk }}"><i class="bi bi-file-earmark-bar-graph"></i> Relatórios</a>{% endif %}
+    {% if perms.eventos.change_evento %}<a class="btn btn-dark" href="{% url 'eventos:evento_editar' object.pk %}"><i class="bi bi-pencil"></i> Editar</a>{% endif %}
+  </div>
+</div>
+
+<div class="row g-3 mb-3">
+  <div class="col-lg-8">
+    <div class="card h-100"><div class="card-header">Informações</div><div class="card-body">
+      {% if object.descricao %}<p>{{ object.descricao|linebreaksbr }}</p>{% endif %}
+      <dl class="lista-info">
+        <dt>Período</dt><dd>{% if object.data_inicio %}{{ object.data_inicio|date:"d/m/Y" }}{% if object.data_fim %} a {{ object.data_fim|date:"d/m/Y" }}{% endif %}{% else %}A definir{% endif %}</dd>
+        <dt>Local</dt><dd>{{ object.local|default:"A definir" }}</dd>
+        <dt>Inscrições</dt><dd>
+          {% if object.inscricoes_inicio or object.inscricoes_fim %}
+            {% if object.inscricoes_inicio %}de {{ object.inscricoes_inicio|date:"d/m/Y H:i" }} {% endif %}{% if object.inscricoes_fim %}até {{ object.inscricoes_fim|date:"d/m/Y H:i" }}{% endif %}
+          {% else %}Sem restrição de data{% endif %}
+          — {% if object.aceita_inscricoes %}<span class="text-success fw-semibold">aceitando inscrições</span>{% else %}<span class="text-danger fw-semibold">fechadas ({{ object.motivo_inscricoes_fechadas }})</span>{% endif %}
+        </dd>
+      </dl>
+      {% if perms.eventos.change_evento %}
+      <form method="post" action="{% url 'eventos:evento_status' object.pk %}" class="d-flex flex-wrap gap-2 align-items-center mt-3 pt-3 border-top">{% csrf_token %}
+        <span class="small text-muted fw-semibold text-uppercase">Alterar status:</span>
+        {% for v, r in object.Status.choices %}{% if v != object.status %}<button name="status" value="{{ v }}" class="btn btn-sm btn-outline-secondary">{{ r }}</button>{% endif %}{% endfor %}
+      </form>
+      {% endif %}
+    </div></div>
+  </div>
+  <div class="col-lg-4">
+    <div class="card stat escuro compacto mb-3"><div class="card-body">
+      <div class="icone"><i class="bi bi-people-fill"></i></div>
+      <div><div class="stat-valor">{{ total_inscritos }}</div><div class="stat-rotulo">Atletas inscritos</div></div>
+    </div></div>
+    {% if perms.eventos.add_evento %}
+    <div class="card"><div class="card-header">Nova edição</div><div class="card-body">
+      <p class="small text-muted">Cria um novo evento com as mesmas modalidades (e pacotes), sem atletas — ideal para a próxima JUV.</p>
+      <form method="post" action="{% url 'eventos:evento_duplicar' object.pk %}">{% csrf_token %}
+        {% include "includes/campo.html" with campo=form_duplicar.nome %}
+        {% include "includes/campo.html" with campo=form_duplicar.edicao %}
+        {% include "includes/campo.html" with campo=form_duplicar.copiar_pacotes %}
+        <button class="btn btn-outline-primary w-100"><i class="bi bi-copy"></i> Criar nova edição</button>
+      </form>
+    </div></div>
+    {% endif %}
+  </div>
+</div>
+
+<div class="card tabela-card mb-3">
+  <div class="card-header">Pacotes de inscrição {% if perms.eventos.add_pacote %}<a class="btn btn-sm btn-primary" href="{% url 'eventos:pacote_novo' %}?evento={{ object.pk }}&next=evento"><i class="bi bi-plus-lg"></i> Pacote</a>{% endif %}</div>
+  <div class="table-responsive"><table class="table tabela-pilha">
+    <thead><tr><th>Pacote</th><th>Valor</th><th>Benefícios</th><th>Regras</th><th>Status</th><th class="text-end">Atletas</th><th></th></tr></thead>
+    <tbody>
+    {% for p in pacotes %}
+      <tr>
+        <td class="principal fw-semibold">{{ p.nome }}</td>
+        <td data-rotulo="Valor" class="text-nowrap">{{ p.valor|brl }}</td>
+        <td data-rotulo="Benefícios">{% for b in p.lista_beneficios %}<span class="chip">{{ b }}</span>{% empty %}—{% endfor %}</td>
+        <td data-rotulo="Regras" class="small">
+          {% if p.max_modalidades %}Até {{ p.max_modalidades }} modalidade(s){% else %}Sem limite{% endif %}<br>
+          {% with pm=p.modalidades_permitidas.all %}{% if pm %}Somente: {{ pm|join:", " }}{% else %}Todas as modalidades do evento{% endif %}{% endwith %}
+        </td>
+        <td data-rotulo="Status">{% if p.ativo %}<span class="badge text-bg-success">Ativo</span>{% else %}<span class="badge text-bg-secondary">Inativo</span>{% endif %}</td>
+        <td data-rotulo="Atletas" class="text-end fw-bold">{{ p.n_atletas }}</td>
+        <td class="text-end">{% if perms.eventos.change_pacote %}<a class="btn btn-sm btn-outline-secondary" href="{% url 'eventos:pacote_editar' p.pk %}?next=evento" aria-label="Editar"><i class="bi bi-pencil"></i></a>{% endif %}</td>
+      </tr>
+    {% empty %}<tr><td colspan="7"><div class="vazio"><i class="bi bi-box-seam"></i>Nenhum pacote vinculado. Cadastre ao menos um para liberar as inscrições.</div></td></tr>{% endfor %}
+    </tbody>
+  </table></div>
+</div>
+
+<div class="row g-3">
+  <div class="col-lg-6">
+    <div class="card h-100"><div class="card-header">Modalidades do evento</div><div class="card-body">
+      <ul class="barras">
+      {% for m in modalidades %}
+        <li><div class="linha"><span>{{ m.nome }} {% if not m.ativa %}<span class="badge text-bg-secondary">inativa</span>{% endif %}</span><strong>{{ m.n_participantes }}</strong></div>
+        <div class="trilho"><div class="barra" style="width: {% if total_inscritos %}{% widthratio m.n_participantes total_inscritos 100 %}{% else %}0{% endif %}%"></div></div></li>
+      {% empty %}<li class="text-muted">Nenhuma modalidade vinculada. <a href="{% url 'eventos:evento_editar' object.pk %}">Vincular modalidades</a>.</li>{% endfor %}
+      </ul>
+      {% if modalidades %}<p class="small text-muted mb-0 mt-2">Barras proporcionais ao total de inscritos no evento.</p>{% endif %}
+    </div></div>
+  </div>
+  <div class="col-lg-6">
+    <div class="card tabela-card h-100"><div class="card-header">Últimas inscrições</div>
+      <div class="table-responsive"><table class="table table-hover">
+        <tbody>
+        {% for i in recentes %}
+          <tr><td><a class="text-reset fw-semibold" href="{% url 'atletas:detalhe' i.atleta_id %}">{{ i.atleta.nome }}</a></td><td><span class="chip vermelho">{{ i.pacote.nome }}</span></td><td class="text-muted small text-nowrap">{{ i.criado_em|date:"d/m H:i" }}</td></tr>
+        {% empty %}<tr><td><div class="vazio"><i class="bi bi-inbox"></i>Nenhuma inscrição ainda.</div></td></tr>{% endfor %}
+        </tbody>
+      </table></div>
+    </div>
+  </div>
+</div>
+{% if perms.eventos.delete_evento %}
+<div class="text-end mt-3"><a class="btn btn-sm btn-outline-danger" href="{% url 'eventos:evento_excluir' object.pk %}"><i class="bi bi-trash"></i> Excluir evento</a></div>
+{% endif %}
+{% endblock %}

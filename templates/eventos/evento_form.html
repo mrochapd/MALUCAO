@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block titulo %}{% if object %}Editar evento{% else %}Novo evento{% endif %}{% endblock %}
+{% block conteudo %}
+<div class="cabecalho"><div>
+  <nav class="breadcrumb"><a href="{% url 'eventos:eventos' %}">Eventos</a>{% if object %}&nbsp;/&nbsp;<a href="{{ object.get_absolute_url }}">{{ object }}</a>{% endif %}</nav>
+  <h1>{% if object %}Editar evento{% else %}Novo evento{% endif %}</h1>
+</div></div>
+<form method="post" class="card" novalidate>{% csrf_token %}
+  <div class="card-body">
+    {{ form.non_field_errors }}
+    <div class="row">
+      <div class="col-md-8">{% include "includes/campo.html" with campo=form.nome %}</div>
+      <div class="col-md-4">{% include "includes/campo.html" with campo=form.edicao %}</div>
+      <div class="col-12">{% include "includes/campo.html" with campo=form.descricao %}</div>
+      <div class="col-md-3">{% include "includes/campo.html" with campo=form.data_inicio %}</div>
+      <div class="col-md-3">{% include "includes/campo.html" with campo=form.data_fim %}</div>
+      <div class="col-md-6">{% include "includes/campo.html" with campo=form.local %}</div>
+    </div>
+    <div class="secao-form">
+      <h2>Inscrições</h2>
+      <p class="text-muted small">Novas inscrições só são aceitas com o status <strong>Inscrições abertas</strong> e dentro do período (se informado).</p>
+      <div class="row">
+        <div class="col-md-4">{% include "includes/campo.html" with campo=form.status %}</div>
+        <div class="col-md-4">{% include "includes/campo.html" with campo=form.inscricoes_inicio %}</div>
+        <div class="col-md-4">{% include "includes/campo.html" with campo=form.inscricoes_fim %}</div>
+      </div>
+    </div>
+    <div class="secao-form">
+      <h2>Modalidades disponíveis</h2>
+      <p class="text-muted small">Somente as modalidades marcadas aparecerão na inscrição dos atletas deste evento.
+        <a href="#" onclick="document.querySelectorAll('input[name=modalidades]').forEach(c=>c.checked=true);return false">Marcar todas</a> ·
+        <a href="#" onclick="document.querySelectorAll('input[name=modalidades]').forEach(c=>c.checked=false);return false">Desmarcar</a></p>
+      {% include "includes/campo.html" with campo=form.modalidades %}
+    </div>
+  </div>
+  <div class="card-footer bg-transparent d-flex gap-2 py-3">
+    <button class="btn btn-primary"><i class="bi bi-check-lg"></i> Salvar evento</button>
+    <a class="btn btn-outline-secondary" href="{% if object %}{{ object.get_absolute_url }}{% else %}{% url 'eventos:eventos' %}{% endif %}">Cancelar</a>
+  </div>
+</form>
+{% endblock %}

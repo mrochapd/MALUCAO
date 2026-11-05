@@ -1,0 +1,18 @@
+{# Renderiza um campo de formulário com rótulo, ajuda e erros. Uso: include "includes/campo.html" with campo=form.nome #}
+<div class="mb-3 {{ classe }} {% if campo.errors %}campo-erro{% endif %}">
+  {% if campo.field.widget.input_type == "checkbox" and not campo.field.widget.allow_multiple_selected %}
+    <div class="form-check">
+      {{ campo }}
+      <label class="form-check-label" for="{{ campo.id_for_label }}">{{ campo.label }}</label>
+    </div>
+  {% else %}
+    <label class="form-label" for="{{ campo.id_for_label }}">{{ campo.label }}{% if campo.field.required %} <span class="text-danger">*</span>{% endif %}</label>
+    {% if campo.field.widget.allow_multiple_selected and campo.field.widget.input_type == "checkbox" %}
+      <div class="grade-checks">{% for op in campo %}<div><label for="{{ op.id_for_label }}">{{ op.tag }} <span>{{ op.choice_label }}</span></label></div>{% empty %}<p class="text-muted small mb-0">Nenhuma opção cadastrada.</p>{% endfor %}</div>
+    {% else %}
+      {{ campo }}
+    {% endif %}
+  {% endif %}
+  {% if campo.help_text %}<div class="form-text">{{ campo.help_text|safe }}</div>{% endif %}
+  {{ campo.errors }}
+</div>

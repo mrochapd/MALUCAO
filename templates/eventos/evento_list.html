@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block titulo %}Eventos{% endblock %}
+{% block conteudo %}
+<div class="cabecalho">
+  <div><h1>Eventos</h1><p class="sub">Cada edição é um evento independente, com suas próprias modalidades, pacotes e atletas.</p></div>
+  {% if perms.eventos.add_evento %}<div class="acoes"><a class="btn btn-primary" href="{% url 'eventos:evento_novo' %}"><i class="bi bi-plus-lg"></i> Novo evento</a></div>{% endif %}
+</div>
+<form class="card card-body mb-3 filtros" method="get" data-autoenvio>
+  <div class="row g-2">
+    <div class="col-md-5"><input type="search" name="q" class="form-control" placeholder="Buscar por nome, edição ou local" value="{{ request.GET.q }}"></div>
+    <div class="col-6 col-md-3"><select name="periodo" class="form-select">
+      <option value="">Todos os períodos</option>
+      <option value="futuros" {% if request.GET.periodo == 'futuros' %}selected{% endif %}>Atuais e futuros</option>
+      <option value="anteriores" {% if request.GET.periodo == 'anteriores' %}selected{% endif %}>Anteriores</option>
+    </select></div>
+    <div class="col-6 col-md-3"><select name="status" class="form-select">
+      <option value="">Todos os status</option>
+      {% for v, r in status_choices %}<option value="{{ v }}" {% if request.GET.status == v %}selected{% endif %}>{{ r }}</option>{% endfor %}
+    </select></div>
+    <div class="col-md-1 d-grid"><button class="btn btn-dark" aria-label="Filtrar"><i class="bi bi-search"></i></button></div>
+  </div>
+</form>
+<div class="row g-3">
+{% for e in eventos %}
+  <div class="col-md-6 col-xl-4">
+    <a href="{{ e.get_absolute_url }}" class="card h-100 text-reset text-decoration-none atalho p-0">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
+          <span class="badge text-bg-{{ e.status_cor }}">{{ e.get_status_display }}</span>
+          {% if e.edicao %}<span class="chip">{{ e.edicao }}</span>{% endif %}
+        </div>
+        <h2 class="h4 mb-1 text-uppercase">{{ e.nome }}</h2>
+        <p class="text-muted small mb-3"><i class="bi bi-calendar-event"></i> {% if e.data_inicio %}{{ e.data_inicio|date:"d/m/Y" }}{% if e.data_fim %} a {{ e.data_fim|date:"d/m/Y" }}{% endif %}{% else %}Datas a definir{% endif %}
+          {% if e.local %}<br><i class="bi bi-geo-alt"></i> {{ e.local }}{% endif %}</p>
+        <div class="d-flex gap-3 small">
+          <span><strong class="fs-5">{{ e.n_inscritos }}</strong> inscritos</span>
+          <span><strong class="fs-5">{{ e.n_modalidades }}</strong> modalidades</span>
+          <span><strong class="fs-5">{{ e.n_pacotes }}</strong> pacotes</span>
+        </div>
+      </div>
+    </a>
+  </div>
+{% empty %}
+  <div class="col-12"><div class="card"><div class="vazio"><i class="bi bi-trophy"></i>Nenhum evento encontrado.</div></div></div>
+{% endfor %}
+</div>
+{% endblock %}

@@ -1,0 +1,10 @@
+Django>=5.2,<5.3
+dj-database-url>=2.2
+django-axes>=7.0
+gunicorn>=23.0
+openpyxl>=3.1
+Pillow>=10.0
+psycopg[binary]>=3.2
+python-dotenv>=1.0
+reportlab>=4.2
+whitenoise>=6.7

@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block titulo %}Relatórios{% endblock %}
+{% block conteudo %}
+<div class="cabecalho">
+  <div><h1>Relatórios</h1><p class="sub">{{ rel.titulo }} · {{ filtros_txt }}</p></div>
+  {% if perms.core.exportar_relatorios %}
+  <div class="acoes no-print">
+    <a class="btn btn-success" href="{% url 'relatorios:exportar' 'xlsx' %}?{{ querystring }}"><i class="bi bi-file-earmark-excel"></i> Excel</a>
+    <a class="btn btn-danger" href="{% url 'relatorios:exportar' 'pdf' %}?{{ querystring }}"><i class="bi bi-file-earmark-pdf"></i> PDF</a>
+  </div>
+  {% endif %}
+</div>
+<form class="card card-body mb-3 filtros no-print" method="get" data-autoenvio>
+  <div class="row g-2">
+    <div class="col-lg-4"><label class="form-label small" for="{{ form.tipo.id_for_label }}">Relatório</label>{{ form.tipo }}</div>
+    <div class="col-md-4 col-lg-3"><label class="form-label small" for="{{ form.evento.id_for_label }}">Evento</label>{{ form.evento }}</div>
+    <div class="col-md-4 col-lg-3"><label class="form-label small" for="{{ form.pacote.id_for_label }}">Pacote</label>{{ form.pacote }}</div>
+    <div class="col-md-4 col-lg-2"><label class="form-label small" for="{{ form.modalidade.id_for_label }}">Modalidade</label>{{ form.modalidade }}</div>
+  </div>
+  <noscript><button class="btn btn-dark mt-2">Gerar</button></noscript>
+</form>
+{% if rel.contem_dados_pessoais and not perms.atletas.ver_dados_pessoais %}
+<div class="alert alert-info small py-2"><i class="bi bi-shield-lock"></i> CPFs exibidos de forma mascarada conforme seu perfil de acesso.</div>
+{% endif %}
+<div class="card tabela-card">
+  <div class="table-responsive">
+    <table class="table table-hover tabela-pilha">
+      <thead><tr>{% for c in rel.colunas_tabela %}<th>{{ c }}</th>{% endfor %}</tr></thead>
+      <tbody>
+      {% for grupo, linhas in rel.grupos_tabela %}
+        {% if grupo %}<tr><td colspan="{{ rel.colunas|length }}" class="grupo-relatorio">{{ grupo }} <span class="badge text-bg-dark ms-1">{{ linhas|length }}</span></td></tr>{% endif %}
+        {% for linha in linhas %}
+          <tr>{% for c, v in linha %}<td {% if forloop.first %}class="principal"{% endif %} data-rotulo="{{ c }}">{{ v }}</td>{% endfor %}</tr>
+        {% endfor %}
+      {% endfor %}
+      {% if not rel.linhas %}<tr><td colspan="{{ rel.colunas|length }}"><div class="vazio"><i class="bi bi-inbox"></i>Nenhum registro encontrado para os filtros informados.</div></td></tr>{% endif %}
+      </tbody>
+    </table>
+  </div>
+  {% if rel.rodape %}<div class="p-3 border-top fw-semibold">{% for r in rel.rodape %}<div>{{ r }}</div>{% endfor %}</div>{% endif %}
+</div>
+{% endblock %}

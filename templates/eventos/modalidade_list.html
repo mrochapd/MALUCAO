@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block titulo %}Modalidades{% endblock %}
+{% block conteudo %}
+<div class="cabecalho">
+  <div><h1>Modalidades</h1><p class="sub">Esportes disponíveis para vincular aos eventos. Desative em vez de excluir para manter o histórico.</p></div>
+  {% if perms.eventos.add_modalidade %}<div class="acoes"><a class="btn btn-primary" href="{% url 'eventos:modalidade_nova' %}"><i class="bi bi-plus-lg"></i> Nova modalidade</a></div>{% endif %}
+</div>
+<form class="d-flex flex-wrap gap-2 mb-3" method="get" data-autoenvio>
+  <select name="status" class="form-select w-auto">
+    <option value="">Todas</option>
+    <option value="ativas" {% if request.GET.status == 'ativas' %}selected{% endif %}>Ativas</option>
+    <option value="inativas" {% if request.GET.status == 'inativas' %}selected{% endif %}>Inativas</option>
+  </select>
+  <select name="tipo" class="form-select w-auto">
+    <option value="">Todos os tipos</option>
+    {% for v, r in tipos %}<option value="{{ v }}" {% if request.GET.tipo == v %}selected{% endif %}>{{ r }}</option>{% endfor %}
+  </select>
+</form>
+<div class="card tabela-card"><div class="table-responsive">
+  <table class="table table-hover tabela-pilha">
+    <thead><tr><th>Modalidade</th><th>Tipo</th><th>Status</th><th class="text-end">Eventos</th><th class="text-end">Participantes</th><th></th></tr></thead>
+    <tbody>
+    {% for m in modalidades %}
+      <tr>
+        <td class="principal"><span class="fw-semibold">{{ m.nome }}</span>{% if m.descricao %}<br><small class="text-muted">{{ m.descricao|truncatechars:80 }}</small>{% endif %}</td>
+        <td data-rotulo="Tipo">{{ m.get_tipo_display }}</td>
+        <td data-rotulo="Status">{% if m.ativa %}<span class="badge text-bg-success">Ativa</span>{% else %}<span class="badge text-bg-secondary">Inativa</span>{% endif %}</td>
+        <td data-rotulo="Eventos" class="text-end">{{ m.n_eventos }}</td>
+        <td data-rotulo="Participantes" class="text-end">{{ m.n_participantes }}</td>
+        <td class="text-end text-nowrap">
+          {% if perms.eventos.change_modalidade %}
+          <form method="post" action="{% url 'eventos:modalidade_alternar' m.pk %}" class="d-inline">{% csrf_token %}
+            <input type="hidden" name="next" value="{{ request.get_full_path }}">
+            <button class="btn btn-sm btn-outline-secondary">{% if m.ativa %}Desativar{% else %}Ativar{% endif %}</button>
+          </form>
+          <a class="btn btn-sm btn-outline-secondary" href="{% url 'eventos:modalidade_editar' m.pk %}" aria-label="Editar"><i class="bi bi-pencil"></i></a>
+          {% endif %}
+        </td>
+      </tr>
+    {% empty %}<tr><td colspan="6"><div class="vazio"><i class="bi bi-dribbble"></i>Nenhuma modalidade encontrada.</div></td></tr>{% endfor %}
+    </tbody>
+  </table>
+</div></div>
+{% endblock %}
