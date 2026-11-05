@@ -17,13 +17,5 @@ class CoreConfig(AppConfig):
 
         auditoria.conectar(Atleta, Inscricao, Evento, Modalidade, Pacote, User, Group)
 
-        def _login(sender, request, user, **kwargs):
-            auditoria.registrar("acesso", "Login", user.pk, user.get_username(), {"resultado": "sucesso"}, request)
-
-        def _falha(sender, credentials, request=None, **kwargs):
-            auditoria.registrar(
-                "acesso", "Login", "", credentials.get("username", ""), {"resultado": "falha"}, request
-            )
-
-        user_logged_in.connect(_login, dispatch_uid="auditoria_login")
-        user_login_failed.connect(_falha, dispatch_uid="auditoria_login_falha")
+        user_logged_in.connect(auditoria.login_sucesso, dispatch_uid="auditoria_login")
+        user_login_failed.connect(auditoria.login_falha, dispatch_uid="auditoria_login_falha")

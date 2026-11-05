@@ -118,6 +118,23 @@ DJANGO_TESTING=1 python manage.py test
 
 Os testes também rodam no GitHub Actions com PostgreSQL a cada push (`.github/workflows/testes.yml`).
 
+## Publicar online (Render) — gratuito, em poucos cliques
+
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/mrochapd/MALUCAO)
+
+1. Clique no botão acima e entre no Render com a sua conta do GitHub.
+2. Preencha **DJANGO_SUPERUSER_PASSWORD** (a senha do usuário `admin`) e **DJANGO_SUPERUSER_EMAIL**.
+3. Clique em **Deploy Blueprint**. Em alguns minutos o site fica no ar em `https://malucao-eventos.onrender.com`
+   (ou endereço parecido, mostrado no painel do Render).
+4. Entre com o usuário **`admin`** e a senha escolhida no passo 2.
+
+O arquivo `render.yaml` cria o site e o banco PostgreSQL, gera a chave secreta e roda `build.sh` (migrações + dados
+iniciais da JUV). Cada `git push` no `main` republica o site automaticamente.
+
+> **Plano gratuito do Render:** o site "dorme" após ~15 min sem acesso (o primeiro acesso seguinte demora cerca de
+> 1 minuto) e o banco PostgreSQL gratuito **expira após 30 dias**. Para uso real durante a JUV, mude o banco (e, de
+> preferência, o site) para um plano pago no painel do Render antes desse prazo, ou os dados serão perdidos.
+
 ## Produção com Docker
 
 ```bash
@@ -150,6 +167,8 @@ atletas/       atletas e inscrições
 relatorios/    relatórios e exportação Excel/PDF
 templates/     telas (Django templates + Bootstrap)
 static/        CSS/JS próprios, logos da Malucão e bibliotecas locais
+render.yaml    publicação no Render (site + PostgreSQL)
+build.sh       build de produção (dependências, arquivos estáticos, migrações, dados iniciais)
 ```
 
 O `/admin/` do Django continua disponível para superusuários como administração avançada.

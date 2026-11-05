@@ -33,6 +33,15 @@ if not SECRET_KEY:
 ALLOWED_HOSTS = env_list("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1")
 CSRF_TRUSTED_ORIGINS = env_list("DJANGO_CSRF_TRUSTED_ORIGINS")
 
+# Hospedagem no Render: o endereço público é informado automaticamente.
+RENDER_EXTERNAL_HOSTNAME = os.environ.get("RENDER_EXTERNAL_HOSTNAME")
+if RENDER_EXTERNAL_HOSTNAME:
+    ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
+    CSRF_TRUSTED_ORIGINS.append(f"https://{RENDER_EXTERNAL_HOSTNAME}")
+
+# Quantos proxies confiáveis ficam na frente da aplicação (Render = 1). Usado para o IP real do cliente.
+TRUSTED_PROXY_COUNT = int(os.environ.get("TRUSTED_PROXY_COUNT", 0))
+
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
@@ -147,7 +156,9 @@ if not DEBUG:
 # Proteção contra força bruta no login (django-axes).
 AXES_FAILURE_LIMIT = int(os.environ.get("AXES_FAILURE_LIMIT", 5))
 AXES_COOLOFF_TIME = 0.5  # horas
-AXES_LOCKOUT_PARAMETERS = ["username", "ip_address"]
+# Bloqueia a combinação usuário + IP: impede força bruta sem permitir que terceiros bloqueiem o administrador.
+AXES_LOCKOUT_PARAMETERS = [["username", "ip_address"]]
+AXES_CLIENT_IP_CALLABLE = "core.rede.ip_cliente"
 AXES_RESET_ON_SUCCESS = True
 AXES_LOCKOUT_TEMPLATE = "registration/bloqueado.html"
 AXES_ENABLED = not os.environ.get("DJANGO_TESTING")

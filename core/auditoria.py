@@ -12,18 +12,14 @@ from django.db.models.signals import m2m_changed, post_delete, post_save, pre_sa
 
 from .cpf import mascarar_cpf
 from .middleware import requisicao_atual
+from .rede import ip_cliente
 
 CAMPOS_IGNORADOS = {"criado_em", "atualizado_em", "password", "last_login"}
 CAMPOS_MASCARADOS = {"cpf": mascarar_cpf}
 
 
 def _ip(request):
-    if request is None:
-        return None
-    encaminhado = request.META.get("HTTP_X_FORWARDED_FOR")
-    if encaminhado:
-        return encaminhado.split(",")[0].strip()
-    return request.META.get("REMOTE_ADDR")
+    return ip_cliente(request)
 
 
 def _usuario(request):
@@ -124,3 +120,11 @@ def conectar(*modelos):
         post_delete.connect(_post_delete, sender=modelo, dispatch_uid=uid + "_del")
         for campo in modelo._meta.many_to_many:
             m2m_changed.connect(_m2m_changed, sender=campo.remote_field.through, dispatch_uid=f"{uid}_{campo.name}")
+
+
+def login_sucesso(sender, request, user, **kwargs):
+    registrar("acesso", "Login", user.pk, user.get_username(), {"resultado": "sucesso"}, request)
+
+
+def login_falha(sender, credentials, request=None, **kwargs):
+    registrar("acesso", "Login", "", credentials.get("username", ""), {"resultado": "falha"}, request)

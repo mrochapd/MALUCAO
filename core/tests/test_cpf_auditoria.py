@@ -39,3 +39,25 @@ class AuditoriaTests(TestCase):
         self.client.post("/eventos/modalidades/nova/", {"nome": "Queimada", "tipo": "coletiva", "naipe": "misto", "ativa": "on"})
         log = RegistroAlteracao.objects.get(entidade="Modalidade", acao="criacao", objeto_repr="Queimada")
         self.assertEqual(log.usuario, u)
+
+
+class IPClienteTests(TestCase):
+    def test_ip_atras_de_proxy(self):
+        from django.test import RequestFactory, override_settings
+
+        from core.rede import ip_cliente
+
+        req = RequestFactory().get("/", HTTP_X_FORWARDED_FOR="6.6.6.6, 200.1.2.3", REMOTE_ADDR="10.0.0.1")
+        self.assertEqual(ip_cliente(req), "10.0.0.1")  # sem proxy configurado, ignora o cabeçalho
+        with override_settings(TRUSTED_PROXY_COUNT=1):
+            self.assertEqual(ip_cliente(req), "200.1.2.3")  # o valor forjado (6.6.6.6) é ignorado
+
+
+class AuditoriaLoginTests(TestCase):
+    def test_login_e_falha_sao_registrados(self):
+        User.objects.create_user("joao", "j@x.com", "Senha-forte-123")
+        self.client.post("/entrar/", {"username": "joao", "password": "errada"})
+        self.client.post("/entrar/", {"username": "joao", "password": "Senha-forte-123"})
+        resultados = list(RegistroAlteracao.objects.filter(entidade="Login").order_by("pk")
+                          .values_list("alteracoes__resultado", flat=True))
+        self.assertEqual(resultados, ["falha", "sucesso"])

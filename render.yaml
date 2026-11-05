@@ -1,0 +1,38 @@
+# Blueprint do Render: cria o site + banco PostgreSQL a partir deste repositório.
+# Publicar: https://render.com/deploy?repo=https://github.com/mrochapd/MALUCAO
+databases:
+  - name: malucao-db
+    plan: free
+    region: virginia
+    databaseName: malucao
+    user: malucao
+
+services:
+  - type: web
+    name: malucao-eventos
+    runtime: python
+    plan: free
+    region: virginia
+    buildCommand: ./build.sh
+    startCommand: gunicorn config.wsgi:application --workers 2 --timeout 60
+    autoDeploy: true
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.13.1
+      - key: DATABASE_URL
+        fromDatabase:
+          name: malucao-db
+          property: connectionString
+      - key: DJANGO_SECRET_KEY
+        generateValue: true
+      - key: DJANGO_DEBUG
+        value: "0"
+      - key: TRUSTED_PROXY_COUNT
+        value: "1"
+      - key: DJANGO_SUPERUSER_USERNAME
+        value: admin
+      # Pedidos na tela de publicação — a senha do administrador é escolhida por você.
+      - key: DJANGO_SUPERUSER_PASSWORD
+        sync: false
+      - key: DJANGO_SUPERUSER_EMAIL
+        sync: false
