@@ -7,13 +7,13 @@
 </div>
 <form class="card card-body mb-3 filtros" method="get" data-autoenvio>
   <div class="row g-2">
-    <div class="col-md-5"><input type="search" name="q" class="form-control" placeholder="Buscar por nome, edição ou local" value="{{ request.GET.q }}"></div>
-    <div class="col-6 col-md-3"><select name="periodo" class="form-select">
+    <div class="col-md-5"><input type="search" enterkeyhint="search" name="q" class="form-control" placeholder="Buscar por nome, edição ou local" value="{{ request.GET.q }}"></div>
+    <div class="col-sm-6 col-md-3"><select name="periodo" class="form-select">
       <option value="">Todos os períodos</option>
       <option value="futuros" {% if request.GET.periodo == 'futuros' %}selected{% endif %}>Atuais e futuros</option>
       <option value="anteriores" {% if request.GET.periodo == 'anteriores' %}selected{% endif %}>Anteriores</option>
     </select></div>
-    <div class="col-6 col-md-3"><select name="status" class="form-select">
+    <div class="col-sm-6 col-md-3"><select name="status" class="form-select">
       <option value="">Todos os status</option>
       {% for v, r in status_choices %}<option value="{{ v }}" {% if request.GET.status == v %}selected{% endif %}>{{ r }}</option>{% endfor %}
     </select></div>

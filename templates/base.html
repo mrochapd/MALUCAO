@@ -2,7 +2,15 @@
 <html lang="pt-br">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0e0e0e">
+  <meta name="format-detection" content="telephone=no">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="Malucão">
+  <link rel="manifest" href="{% static 'manifest.webmanifest' %}">
+  <link rel="apple-touch-icon" href="{% static 'img/apple-touch-icon.png' %}">
   <meta name="robots" content="noindex, nofollow">
   <title>{% block titulo %}Painel{% endblock %} · {{ SISTEMA_NOME }}</title>
   <link rel="icon" href="{% static 'img/favicon-64.png' %}">
@@ -16,6 +24,7 @@
 {% block corpo %}
   <aside class="sidebar" aria-label="Menu principal">
     <div class="marca">
+      <button class="btn btn-fechar-menu" type="button" data-fechar-menu aria-label="Fechar menu"><i class="bi bi-x-lg"></i></button>
       <a href="{% url 'core:dashboard' %}"><img src="{% static 'img/logo-wordmark.png' %}" alt="Malucão — Atlética das Engenharias AAAE IFMG GV"></a>
     </div>
     <nav>
@@ -52,7 +61,7 @@
   <div class="conteudo">
     <header class="topo-mobile">
       <a href="{% url 'core:dashboard' %}"><img src="{% static 'img/logo-wordmark.png' %}" alt="Malucão"></a>
-      <button class="btn btn-outline-light btn-sm" data-abrir-menu aria-label="Abrir menu"><i class="bi bi-list fs-5"></i></button>
+      <button class="btn btn-outline-light btn-menu" type="button" data-abrir-menu aria-label="Abrir menu" aria-expanded="false"><i class="bi bi-list fs-5"></i></button>
     </header>
     <main class="pagina">
       {% if messages %}

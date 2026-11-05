@@ -5,16 +5,35 @@
   // ---------------------------------------------------------------- Menu lateral (celular)
   const sidebar = document.querySelector(".sidebar");
   const fundo = document.querySelector(".sidebar-fundo");
-  document.querySelectorAll("[data-abrir-menu]").forEach((btn) =>
+  const botoesMenu = document.querySelectorAll("[data-abrir-menu]");
+  function menu(abrir) {
+    if (!sidebar) return;
+    sidebar.classList.toggle("aberta", abrir);
+    if (fundo) fundo.classList.toggle("visivel", abrir);
+    document.body.classList.toggle("menu-aberto", abrir);
+    botoesMenu.forEach((b) => b.setAttribute("aria-expanded", String(abrir)));
+    if (abrir) { const f = sidebar.querySelector("[data-fechar-menu]"); if (f) f.focus(); }
+  }
+  botoesMenu.forEach((btn) => btn.addEventListener("click", () => menu(!sidebar.classList.contains("aberta"))));
+  document.querySelectorAll("[data-fechar-menu]").forEach((btn) => btn.addEventListener("click", () => menu(false)));
+  if (fundo) fundo.addEventListener("click", () => menu(false));
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape") menu(false); });
+  window.matchMedia("(min-width: 992px)").addEventListener("change", (e) => { if (e.matches) menu(false); });
+
+  // ---------------------------------------------------------------- Login: foco e mostrar senha
+  // No celular o foco automático abriria o teclado e esconderia a tela; só focamos no computador.
+  const focoDesktop = document.querySelector("[data-foco-desktop]");
+  if (focoDesktop && window.matchMedia("(min-width: 861px) and (hover: hover)").matches) focoDesktop.focus();
+  document.querySelectorAll("[data-mostrar-senha]").forEach((btn) =>
     btn.addEventListener("click", () => {
-      sidebar.classList.toggle("aberta");
-      fundo.classList.toggle("visivel");
+      const campo = document.getElementById(btn.dataset.mostrarSenha);
+      const mostrar = campo.type === "password";
+      campo.type = mostrar ? "text" : "password";
+      btn.setAttribute("aria-pressed", String(mostrar));
+      btn.setAttribute("aria-label", mostrar ? "Ocultar senha" : "Mostrar senha");
+      btn.querySelector("i").className = mostrar ? "bi bi-eye-slash" : "bi bi-eye";
     })
   );
-  if (fundo) fundo.addEventListener("click", () => {
-    sidebar.classList.remove("aberta");
-    fundo.classList.remove("visivel");
-  });
 
   // ---------------------------------------------------------------- Máscara e verificação de CPF
   const digitos = (v) => (v || "").replace(/\D/g, "");

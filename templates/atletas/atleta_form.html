@@ -24,7 +24,7 @@
       <div class="col-md-4 {% if form.cpf.errors %}campo-erro{% endif %} mb-3">
         <label class="form-label" for="{{ form.cpf.id_for_label }}">CPF <span class="text-danger">*</span></label>
         <input type="text" name="{{ form.cpf.html_name }}" id="{{ form.cpf.id_for_label }}" class="form-control cpf"
-               value="{{ form.cpf.value|default:'' }}" inputmode="numeric" maxlength="14" placeholder="000.000.000-00" required
+               value="{{ form.cpf.value|default:'' }}" inputmode="numeric" autocomplete="off" enterkeyhint="next" maxlength="14" placeholder="000.000.000-00" required
                data-mascara="cpf" data-verificar="{% url 'atletas:verificar_cpf' %}" {% if object %}data-excluir="{{ object.pk }}"{% endif %}>
         <div class="invalid-feedback">CPF inválido ou já cadastrado.</div>
         {{ form.cpf.errors }}

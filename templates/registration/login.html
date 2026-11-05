@@ -2,25 +2,34 @@
 {% block titulo %}Entrar{% endblock %}
 {% block corpo %}
 <div class="tela-login">
-  <div class="arte"><img src="{% static 'img/logo-mascote.png' %}" alt="Mascote da Atlética Malucão"></div>
+  <div class="arte"><img src="{% static 'img/logo-mascote.png' %}" alt="Mascote da Atlética Malucão" width="783" height="800"></div>
   <div class="lado-form">
     <div class="caixa">
       <p class="text-primary fw-bold text-uppercase small mb-1" style="letter-spacing:.12em">Gestão de eventos esportivos</p>
       <h1 class="mb-1">Acesso restrito</h1>
       <p class="text-muted mb-4">Entre com o usuário fornecido pela diretoria da Atlética.</p>
-      {% if form.non_field_errors %}<div class="alert alert-danger py-2">Usuário ou senha incorretos.</div>{% endif %}
+      {% if form.non_field_errors %}<div class="alert alert-danger py-2" role="alert">Usuário ou senha incorretos.</div>{% endif %}
       <form method="post" novalidate>
         {% csrf_token %}
         <input type="hidden" name="next" value="{{ next }}">
         <div class="mb-3">
           <label class="form-label" for="id_username">Usuário</label>
-          <input class="form-control form-control-lg" id="id_username" name="username" autocomplete="username" autofocus required value="{{ form.username.value|default:'' }}">
+          {# autocapitalize/autocorrect: evita que o teclado do celular troque "admin" por "Admin" #}
+          <input class="form-control form-control-lg" id="id_username" name="username" required
+                 autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false"
+                 enterkeyhint="next" data-foco-desktop value="{{ form.username.value|default:'' }}">
         </div>
         <div class="mb-4">
           <label class="form-label" for="id_password">Senha</label>
-          <input class="form-control form-control-lg" type="password" id="id_password" name="password" autocomplete="current-password" required>
+          <div class="input-group input-group-lg">
+            <input class="form-control" type="password" id="id_password" name="password" required
+                   autocomplete="current-password" autocapitalize="none" autocorrect="off" spellcheck="false"
+                   enterkeyhint="go">
+            <button class="btn btn-outline-secondary" type="button" data-mostrar-senha="id_password"
+                    aria-label="Mostrar senha" aria-pressed="false"><i class="bi bi-eye"></i></button>
+          </div>
         </div>
-        <button class="btn btn-primary btn-lg w-100 text-uppercase">Entrar <i class="bi bi-arrow-right"></i></button>
+        <button class="btn btn-primary btn-lg w-100 text-uppercase" type="submit">Entrar <i class="bi bi-arrow-right"></i></button>
       </form>
       <p class="small text-muted mt-4 mb-0"><i class="bi bi-shield-lock"></i> Acesso monitorado. Após 5 tentativas incorretas o acesso é bloqueado temporariamente.</p>
     </div>

@@ -21,8 +21,11 @@ class AtletaForm(BootstrapFormMixin, forms.ModelForm):
         widgets = {
             "sexo": forms.RadioSelect,
             "observacoes": forms.Textarea(attrs={"rows": 2}),
-            "telefone": forms.TextInput(attrs={"inputmode": "tel", "placeholder": "(33) 90000-0000"}),
-            "email": forms.EmailInput(attrs={"placeholder": "nome@exemplo.com"}),
+            "nome": forms.TextInput(attrs={"autocomplete": "off", "autocapitalize": "words", "enterkeyhint": "next"}),
+            "telefone": forms.TextInput(attrs={"type": "tel", "inputmode": "tel", "autocomplete": "off",
+                                               "placeholder": "(33) 90000-0000"}),
+            "email": forms.EmailInput(attrs={"placeholder": "nome@exemplo.com", "autocomplete": "off",
+                                             "autocapitalize": "none", "autocorrect": "off", "spellcheck": "false"}),
         }
 
     def __init__(self, *args, **kwargs):
@@ -162,7 +165,8 @@ class InscricaoForm(BootstrapFormMixin, forms.ModelForm):
 
 class FiltroAtletasForm(BootstrapFormMixin, forms.Form):
     q = forms.CharField(label="Buscar", required=False,
-                        widget=forms.TextInput(attrs={"placeholder": "Nome ou CPF", "type": "search"}))
+                        widget=forms.TextInput(attrs={"placeholder": "Nome ou CPF", "type": "search",
+                                                         "enterkeyhint": "search", "autocomplete": "off"}))
     evento = forms.ModelChoiceField(Evento.objects.all(), required=False, empty_label="Todos os eventos")
     pacote = forms.ModelChoiceField(Pacote.objects.select_related("evento"), required=False,
                                     empty_label="Todos os pacotes")

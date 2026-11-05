@@ -41,6 +41,10 @@ class UsuarioForm(BootstrapFormMixin, forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["email"].required = True
+        for nome in ("username", "email"):
+            self.fields[nome].widget.attrs.update(autocapitalize="none", autocorrect="off", spellcheck="false")
+        self.fields["senha"].widget.attrs["autocomplete"] = "new-password"
+        self.fields["senha_confirmacao"].widget.attrs["autocomplete"] = "new-password"
         if self.instance.pk:
             self.fields["grupos"].initial = self.instance.groups.all()
         else:

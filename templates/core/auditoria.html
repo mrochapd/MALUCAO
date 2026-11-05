@@ -6,9 +6,9 @@
 </div>
 <form class="card card-body mb-3 filtros" method="get" data-autoenvio>
   <div class="row g-2">
-    <div class="col-md-5"><input type="search" class="form-control" name="q" value="{{ request.GET.q }}" placeholder="Buscar por registro ou usuário"></div>
-    <div class="col-6 col-md-3"><select class="form-select" name="entidade"><option value="">Todos os cadastros</option>{% for e in entidades %}<option {% if request.GET.entidade == e %}selected{% endif %}>{{ e }}</option>{% endfor %}</select></div>
-    <div class="col-6 col-md-2"><select class="form-select" name="acao"><option value="">Todas as ações</option>{% for v, r in acoes %}<option value="{{ v }}" {% if request.GET.acao == v %}selected{% endif %}>{{ r }}</option>{% endfor %}</select></div>
+    <div class="col-md-5"><input type="search" enterkeyhint="search" class="form-control" name="q" value="{{ request.GET.q }}" placeholder="Buscar por registro ou usuário"></div>
+    <div class="col-sm-6 col-md-3"><select class="form-select" name="entidade" aria-label="Cadastro"><option value="">Todos os cadastros</option>{% for e in entidades %}<option {% if request.GET.entidade == e %}selected{% endif %}>{{ e }}</option>{% endfor %}</select></div>
+    <div class="col-sm-6 col-md-2"><select class="form-select" name="acao" aria-label="Ação"><option value="">Todas as ações</option>{% for v, r in acoes %}<option value="{{ v }}" {% if request.GET.acao == v %}selected{% endif %}>{{ r }}</option>{% endfor %}</select></div>
     <div class="col-md-2 d-grid"><button class="btn btn-dark"><i class="bi bi-funnel"></i> Filtrar</button></div>
   </div>
 </form>
