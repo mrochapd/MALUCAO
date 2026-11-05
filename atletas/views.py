@@ -34,6 +34,8 @@ def filtrar_atletas(qs, dados):
         if dados.get("evento"):
             filtro_mod &= Q(inscricoes__evento=dados["evento"])
         qs = qs.filter(filtro_mod)
+    if dados.get("sexo"):
+        qs = qs.filter(sexo=dados["sexo"])
     return qs.distinct()
 
 
@@ -79,6 +81,8 @@ def atleta_criar(request):
     form_inscricao = InscricaoForm(request.POST or None, usuario=request.user, obrigatoria=False, prefix="insc")
     if request.method == "POST":
         atleta_ok = form.is_valid()
+        # o sexo informado no próprio cadastro define os naipes permitidos na inscrição
+        form_inscricao.sexo = form.cleaned_data.get("sexo") if atleta_ok else request.POST.get("sexo", "")
         inscricao_ok = form_inscricao.is_valid()
         if atleta_ok and inscricao_ok:
             with transaction.atomic():
@@ -164,7 +168,7 @@ def inscricao_form(request, atleta_pk=None, pk=None):
         form.save()
         messages.success(request, "Inscrição salva com sucesso.")
         return redirect(atleta)
-    ctx = {"form_inscricao": form, "atleta": atleta, "inscricao": inscricao}
+    ctx = {"form_inscricao": form, "atleta": atleta, "inscricao": inscricao, "sexo_atleta": atleta.sexo}
     ctx.update(_contexto_inscricao(form, inscricao))
     return render(request, "atletas/inscricao_form.html", ctx)
 

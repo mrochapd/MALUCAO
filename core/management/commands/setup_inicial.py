@@ -18,12 +18,15 @@ from atletas.models import Atleta, Inscricao
 from core.cpf import gerar_cpf_valido
 from eventos.models import Evento, Modalidade, Pacote
 
+# (nome, tipo, naipe) — naipes conforme o regulamento da JUV
 MODALIDADES = [
-    ("Futsal", "coletiva"), ("Fut7", "coletiva"), ("Vôlei", "coletiva"), ("Handebol", "coletiva"),
-    ("Basquete", "coletiva"), ("Vôlei de Praia", "dupla"), ("Tênis de Mesa", "individual"),
-    ("Peteca", "dupla"), ("E-sports", "coletiva"), ("Truco", "dupla"), ("Sinuca", "individual"),
-    ("Xadrez", "individual"), ("Atletismo", "individual"), ("Beach Tênis", "dupla"),
-    ("Natação", "individual"), ("Futevôlei", "dupla"),
+    ("Futsal", "coletiva", "masc_fem"), ("Fut7", "coletiva", "masculino"), ("Vôlei", "coletiva", "masc_fem"),
+    ("Handebol", "coletiva", "masc_fem"), ("Basquete", "coletiva", "masc_fem"),
+    ("Vôlei de Praia", "dupla", "masc_fem"), ("Tênis de Mesa", "individual", "masc_fem"),
+    ("Peteca", "dupla", "masc_fem"), ("E-sports", "coletiva", "misto"), ("Truco", "dupla", "masc_fem"),
+    ("Sinuca", "dupla", "dupla_mista"), ("Xadrez", "individual", "misto"),
+    ("Atletismo", "individual", "masc_fem"), ("Beach Tênis", "dupla", "dupla_mista"),
+    ("Natação", "individual", "masc_fem"), ("Futevôlei", "dupla", "dupla_mista"),
 ]
 
 APPS = ["atletas", "eventos"]
@@ -43,8 +46,8 @@ PERFIS = {
     ],
 }
 
-NOMES = ["Ana", "Bruno", "Carla", "Diego", "Eduarda", "Felipe", "Gabriela", "Henrique", "Isabela", "João",
-         "Larissa", "Marcos", "Natália", "Otávio", "Paula", "Rafael", "Sabrina", "Thiago", "Vitória", "Lucas"]
+NOMES_F = ["Ana", "Carla", "Eduarda", "Gabriela", "Isabela", "Larissa", "Natália", "Paula", "Sabrina", "Vitória"]
+NOMES_M = ["Bruno", "Diego", "Felipe", "Henrique", "João", "Marcos", "Otávio", "Rafael", "Thiago", "Lucas"]
 SOBRENOMES = ["Silva", "Souza", "Oliveira", "Pereira", "Costa", "Rodrigues", "Almeida", "Lima", "Gomes",
               "Ribeiro", "Martins", "Carvalho", "Rocha", "Ferreira", "Barbosa"]
 
@@ -86,8 +89,8 @@ class Command(BaseCommand):
 
     def _modalidades(self):
         objs = []
-        for nome, tipo in MODALIDADES:
-            m, criada = Modalidade.objects.get_or_create(nome=nome, defaults={"tipo": tipo})
+        for nome, tipo, naipe in MODALIDADES:
+            m, criada = Modalidade.objects.get_or_create(nome=nome, defaults={"tipo": tipo, "naipe": naipe})
             objs.append(m)
         self.stdout.write(f"  {len(objs)} modalidades iniciais disponíveis")
         return objs
@@ -141,11 +144,14 @@ class Command(BaseCommand):
             cpf = gerar_cpf_valido(f"{rnd.randint(100_000_000, 999_999_999)}")
             if Atleta.objects.filter(cpf=cpf).exists():
                 continue
-            nome = f"{rnd.choice(NOMES)} {rnd.choice(SOBRENOMES)} {rnd.choice(SOBRENOMES)}"
+            sexo = rnd.choice("MF")
+            primeiro = rnd.choice(NOMES_M if sexo == "M" else NOMES_F)
+            nome = f"{primeiro} {rnd.choice(SOBRENOMES)} {rnd.choice(SOBRENOMES)}"
             atleta = Atleta.objects.create(
-                nome=nome, cpf=cpf, email=f"{nome.split()[0].lower()}.{i}@exemplo.com", consentimento_lgpd=True,
+                nome=nome, cpf=cpf, sexo=sexo, email=f"{primeiro.lower()}.{i}@exemplo.com", consentimento_lgpd=True,
             )
             insc = Inscricao.objects.create(atleta=atleta, evento=evento, pacote=rnd.choice(pacotes))
-            insc.modalidades.set(rnd.sample(modalidades, rnd.randint(1, 3)))
+            possiveis = [m for m in modalidades if m.aceita_sexo(sexo)]
+            insc.modalidades.set(rnd.sample(possiveis, rnd.randint(1, 3)))
             criados += 1
         self.stdout.write(f"  {criados} atletas de demonstração criados")

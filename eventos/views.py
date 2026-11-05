@@ -40,11 +40,14 @@ class ModalidadeListView(PermissaoMixin, ListView):
             qs = qs.filter(ativa=False)
         if self.request.GET.get("tipo"):
             qs = qs.filter(tipo=self.request.GET["tipo"])
+        if self.request.GET.get("naipe"):
+            qs = qs.filter(naipe=self.request.GET["naipe"])
         return qs
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         ctx["tipos"] = Modalidade.Tipo.choices
+        ctx["naipes"] = Modalidade.Naipe.choices
         return ctx
 
 
@@ -125,8 +128,14 @@ class EventoDetailView(PermissaoMixin, DetailView):
         evento = self.object
         ctx["pacotes"] = evento.pacotes.annotate(n_atletas=Count("inscricoes")).prefetch_related("modalidades_permitidas")
         ctx["modalidades"] = evento.modalidades.annotate(
-            n_participantes=Count("inscricoes", filter=Q(inscricoes__evento=evento), distinct=True)
+            n_participantes=Count("inscricoes", filter=Q(inscricoes__evento=evento), distinct=True),
+            n_masc=Count("inscricoes", filter=Q(inscricoes__evento=evento, inscricoes__atleta__sexo="M"), distinct=True),
+            n_fem=Count("inscricoes", filter=Q(inscricoes__evento=evento, inscricoes__atleta__sexo="F"), distinct=True),
         )
+        ctx["por_sexo"] = {
+            "M": evento.inscricoes.filter(atleta__sexo="M").count(),
+            "F": evento.inscricoes.filter(atleta__sexo="F").count(),
+        }
         ctx["total_inscritos"] = evento.inscricoes.count()
         ctx["recentes"] = evento.inscricoes.select_related("atleta", "pacote")[:10]
         ctx["form_duplicar"] = DuplicarEventoForm(initial={"nome": evento.nome})

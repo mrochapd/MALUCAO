@@ -18,7 +18,7 @@ def _gerar(request):
     else:
         form = FiltroRelatorioForm(initial={"tipo": "inscritos"})
         dados = {"tipo": "inscritos"}
-    filtros = Filtros(dados.get("evento"), dados.get("pacote"), dados.get("modalidade"))
+    filtros = Filtros(dados.get("evento"), dados.get("pacote"), dados.get("modalidade"), dados.get("sexo", ""))
     rel = gerar(dados["tipo"], filtros, request.user.has_perm("atletas.ver_dados_pessoais"))
     return form, filtros, rel
 

@@ -83,7 +83,11 @@ class DashboardView(LoginRequiredMixin, TemplateView):
             .values("pk", "nome", "total")
         )
 
+        atletas_base = Atleta.objects.filter(inscricoes__evento=evento).distinct() if evento else Atleta.objects.all()
         ctx.update(
+            atletas_masc=atletas_base.filter(sexo="M").count(),
+            atletas_fem=atletas_base.filter(sexo="F").count(),
+            atletas_sem_sexo=atletas_base.filter(sexo="").count(),
             eventos=eventos,
             evento_filtro=evento,
             total_atletas=Atleta.objects.filter(inscricoes__evento=evento).distinct().count()

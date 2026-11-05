@@ -12,15 +12,30 @@ edições e outros eventos sem mudança no código.
 | Módulo | O que faz |
 |---|---|
 | **Painel** | Total de atletas, inscrições por evento, atletas por pacote, participantes por modalidade, eventos, modalidades disponíveis, inscrições recentes e atalhos. Filtro por evento. |
-| **Atletas** | Cadastro (nome, CPF, e-mail, telefone, consentimento LGPD), edição, exclusão, busca por nome/CPF/e-mail, filtros por evento, pacote e modalidade, histórico de inscrições e alterações. |
+| **Atletas** | Cadastro (nome, CPF, **sexo**, e-mail, telefone, consentimento LGPD), edição, exclusão, busca por nome/CPF/e-mail, filtros por evento, pacote e modalidade, histórico de inscrições e alterações. |
 | **Inscrição** | No cadastro do atleta: **evento → pacote → modalidades**. Aparecem só os pacotes e modalidades **vinculados ao evento escolhido**, e as regras do pacote são aplicadas. |
 | **Duplicidade** | CPF único no banco, com aviso em tempo real ao digitar um CPF já cadastrado (e atalho para adicionar a inscrição ao cadastro existente). Também há a tela “Possíveis duplicados” (mesmo nome ou e-mail com CPFs diferentes). |
-| **Modalidades** | As 16 modalidades da JUV vêm pré-cadastradas. Tipo (individual, dupla ou coletiva), ativar/desativar, total de eventos e de participantes. |
+| **Modalidades** | As 16 modalidades da JUV vêm pré-cadastradas. Tipo (individual, dupla ou coletiva), **naipe** (veja abaixo), ativar/desativar, total de eventos e de participantes. |
 | **Eventos** | Nome, edição, descrição, datas, local, status (planejamento, inscrições abertas, inscrições encerradas, finalizado) e período de inscrições. Modalidades vinculadas, pacotes, quantidade de inscritos, consulta a eventos anteriores e futuros, e **“Criar nova edição”**, que copia modalidades e pacotes sem levar os atletas. |
 | **Pacotes** | Nome, descrição, valor, evento, benefícios (um por linha), status e **regras**: limite de modalidades por atleta e modalidades permitidas. Mostra a quantidade de atletas por pacote. |
-| **Relatórios** | Lista geral de inscritos, atletas por modalidade, atletas por pacote, quantidade por modalidade, por evento e por pacote (com receita estimada) e relação completa. Filtros por evento, pacote e modalidade. **Exportação em Excel e PDF.** |
+| **Relatórios** | Filtro por **sexo** e contagens masculino/feminino. Atletas por modalidade agrupados por disputa (ex.: *Futsal Masculino* e *Futsal Feminino*). Lista geral de inscritos, atletas por modalidade, atletas por pacote, quantidade por modalidade, por evento e por pacote (com receita estimada) e relação completa. Filtros por evento, pacote e modalidade. **Exportação em Excel e PDF.** |
 | **Usuários** | Gestão de usuários e perfis de acesso. |
 | **Auditoria** | Registro de criações, alterações (campo a campo, com o valor anterior e o novo), exclusões, exportações e logins, com usuário e IP. Os registros não podem ser editados. |
+
+### Sexo e naipes (regulamento da JUV)
+
+O sexo do atleta é obrigatório e define em qual naipe ele compete. Cada modalidade tem um naipe:
+
+| Naipe | Regra | Modalidades da JUV |
+|---|---|---|
+| Masculino e feminino | disputas separadas por sexo | Futsal, Vôlei, Handebol, Basquete, Vôlei de Praia, Tênis de Mesa, Peteca, Truco, Atletismo, Natação |
+| Somente masculino | atleta feminina não pode ser inscrita | Fut7 (Futebol Society Masculino) |
+| Somente feminino | atleta masculino não pode ser inscrito | — |
+| Misto | aberto a qualquer sexo | Xadrez, E-sports |
+| Dupla/equipe mista | aberto a ambos; a equipe precisa de homens e mulheres | Sinuca, Beach Tênis, Futevôlei |
+
+Na inscrição, as modalidades exclusivas do outro sexo ficam bloqueadas. O relatório de quantidades avisa quando
+uma dupla mista não tem ao menos 1 homem e 1 mulher inscritos.
 
 ### Regras de relacionamento
 
@@ -35,6 +50,7 @@ Inscrição >──< Modalidade          (várias modalidades por inscrição, t
 Validações aplicadas no servidor (também refletidas na tela):
 - o pacote precisa pertencer ao evento;
 - as modalidades precisam estar ativas, vinculadas ao evento e permitidas pelo pacote;
+- o sexo do atleta precisa ser compatível com o naipe da modalidade;
 - o número de modalidades respeita o limite do pacote;
 - um atleta tem só uma inscrição por evento;
 - novas inscrições exigem o status *Inscrições abertas* e a data dentro do período, se houver um definido. Somente perfis com a permissão “inscrever fora do período” (Administrador) passam por cima dessa regra.

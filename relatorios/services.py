@@ -74,9 +74,18 @@ TIPOS = [
 TITULOS = dict(TIPOS)
 
 
+SEXOS = {"M": "Masculino", "F": "Feminino"}
+
+
+def _sexo(atleta):
+    return SEXOS.get(atleta.sexo, "Não informado")
+
+
 class Filtros:
-    def __init__(self, evento: Evento | None = None, pacote: Pacote | None = None, modalidade: Modalidade | None = None):
+    def __init__(self, evento: Evento | None = None, pacote: Pacote | None = None,
+                 modalidade: Modalidade | None = None, sexo: str = ""):
         self.evento, self.pacote, self.modalidade = evento, pacote, modalidade
+        self.sexo = sexo if sexo in SEXOS else ""
 
     def descricao(self) -> str:
         partes = []
@@ -86,6 +95,8 @@ class Filtros:
             partes.append(f"Pacote: {self.pacote}")
         if self.modalidade:
             partes.append(f"Modalidade: {self.modalidade}")
+        if self.sexo:
+            partes.append(f"Sexo: {SEXOS[self.sexo]}")
         return " · ".join(partes) or "Todos os eventos, pacotes e modalidades"
 
     def inscricoes(self):
@@ -96,6 +107,8 @@ class Filtros:
             qs = qs.filter(pacote=self.pacote)
         if self.modalidade:
             qs = qs.filter(modalidades=self.modalidade)
+        if self.sexo:
+            qs = qs.filter(atleta__sexo=self.sexo)
         return qs.distinct()
 
     def filtro_inscricao(self, prefixo="inscricoes__"):
@@ -104,6 +117,8 @@ class Filtros:
             q &= Q(**{f"{prefixo}evento": self.evento})
         if self.pacote:
             q &= Q(**{f"{prefixo}pacote": self.pacote})
+        if self.sexo:
+            q &= Q(**{f"{prefixo}atleta__sexo": self.sexo})
         return q
 
 
@@ -114,63 +129,85 @@ def gerar(chave: str, filtros: Filtros, mostrar_cpf_completo: bool = False) -> R
         raise ValueError("Relatório desconhecido")
 
     def nomes_modalidades(inscricao):
-        mods = [m.nome for m in inscricao.modalidades.all()]
-        return ", ".join(sorted(mods))
+        return ", ".join(inscricao.disputas())
 
     if chave == "inscritos":
-        rel = Relatorio(chave, titulo, ["Atleta", "CPF", "E-mail", "Evento", "Pacote", "Modalidades", "Inscrito em"])
+        rel = Relatorio(chave, titulo, ["Atleta", "Sexo", "CPF", "E-mail", "Evento", "Pacote", "Modalidades",
+                                        "Inscrito em"])
         for i in filtros.inscricoes().order_by("atleta__nome"):
-            rel.linhas.append([i.atleta.nome, cpf(i.atleta), i.atleta.email, str(i.evento), i.pacote.nome,
-                               nomes_modalidades(i), _data(timezone.localtime(i.criado_em))])
+            rel.linhas.append([i.atleta.nome, _sexo(i.atleta), cpf(i.atleta), i.atleta.email, str(i.evento),
+                               i.pacote.nome, nomes_modalidades(i), _data(timezone.localtime(i.criado_em))])
         rel.rodape.append(f"Total de inscrições: {len(rel.linhas)}")
 
     elif chave == "por_modalidade":
-        rel = Relatorio(chave, titulo, ["Modalidade", "Atleta", "CPF", "E-mail", "Evento", "Pacote"], agrupar_por=0)
+        rel = Relatorio(chave, titulo, ["Disputa (modalidade e naipe)", "Atleta", "Sexo", "CPF", "E-mail", "Evento",
+                                        "Pacote"], agrupar_por=0)
         linhas = []
         for i in filtros.inscricoes():
             for m in i.modalidades.all():
                 if filtros.modalidade and m != filtros.modalidade:
                     continue
-                linhas.append([m.nome, i.atleta.nome, cpf(i.atleta), i.atleta.email, str(i.evento), i.pacote.nome])
+                linhas.append([m.nome_naipe(i.atleta.sexo), i.atleta.nome, _sexo(i.atleta), cpf(i.atleta),
+                               i.atleta.email, str(i.evento), i.pacote.nome])
         rel.linhas = sorted(linhas, key=lambda l: (l[0], l[1]))
         rel.rodape.append(f"Total de participações: {len(rel.linhas)}")
 
     elif chave == "por_pacote":
-        rel = Relatorio(chave, titulo, ["Pacote", "Atleta", "CPF", "E-mail", "Evento", "Modalidades"], agrupar_por=0)
+        rel = Relatorio(chave, titulo, ["Pacote", "Atleta", "Sexo", "CPF", "E-mail", "Evento", "Modalidades"],
+                        agrupar_por=0)
         for i in filtros.inscricoes().order_by("pacote__nome", "evento__nome", "atleta__nome"):
-            rel.linhas.append([f"{i.pacote.nome} — {i.evento}", i.atleta.nome, cpf(i.atleta), i.atleta.email,
-                               str(i.evento), nomes_modalidades(i)])
+            rel.linhas.append([f"{i.pacote.nome} — {i.evento}", i.atleta.nome, _sexo(i.atleta), cpf(i.atleta),
+                               i.atleta.email, str(i.evento), nomes_modalidades(i)])
         rel.rodape.append(f"Total de atletas: {len(rel.linhas)}")
 
     elif chave == "qtd_modalidade":
-        rel = Relatorio(chave, titulo, ["Modalidade", "Tipo", "Status", "Inscritos"], contem_dados_pessoais=False)
+        rel = Relatorio(chave, titulo, ["Modalidade", "Tipo", "Naipe", "Masculino", "Feminino", "Total", "Observação"],
+                        contem_dados_pessoais=False)
         filtro = filtros.filtro_inscricao()
         qs = Modalidade.objects.all()
         if filtros.evento:
             qs = qs.filter(eventos=filtros.evento)
         if filtros.modalidade:
             qs = qs.filter(pk=filtros.modalidade.pk)
-        qs = qs.annotate(total=Count("inscricoes", filter=filtro, distinct=True)).order_by("-total", "nome")
+        qs = qs.annotate(
+            total=Count("inscricoes", filter=filtro, distinct=True),
+            masc=Count("inscricoes", filter=filtro & Q(inscricoes__atleta__sexo="M"), distinct=True),
+            fem=Count("inscricoes", filter=filtro & Q(inscricoes__atleta__sexo="F"), distinct=True),
+        ).order_by("-total", "nome")
         for m in qs:
-            rel.linhas.append([m.nome, m.get_tipo_display(), "Ativa" if m.ativa else "Inativa", m.total])
-        rel.rodape.append(f"Total de participações: {sum(l[3] for l in rel.linhas)}")
+            obs = ""
+            if m.naipe == Modalidade.Naipe.DUPLA_MISTA and m.total and (not m.masc or not m.fem):
+                obs = "Atenção: dupla mista exige ao menos 1 homem e 1 mulher"
+            elif not m.ativa:
+                obs = "Modalidade inativa"
+            rel.linhas.append([m.nome, m.get_tipo_display(), m.naipe_curto, m.masc, m.fem, m.total, obs])
+        rel.rodape.append(
+            f"Participações: {sum(l[5] for l in rel.linhas)} "
+            f"(masculino: {sum(l[3] for l in rel.linhas)} · feminino: {sum(l[4] for l in rel.linhas)})"
+        )
 
     elif chave == "qtd_evento":
-        rel = Relatorio(chave, titulo, ["Evento", "Status", "Início", "Encerramento", "Local", "Inscritos"],
-                        contem_dados_pessoais=False)
+        rel = Relatorio(chave, titulo, ["Evento", "Status", "Início", "Encerramento", "Local", "Masculino",
+                                        "Feminino", "Inscritos"], contem_dados_pessoais=False)
         filtro = Q()
         if filtros.pacote:
             filtro &= Q(inscricoes__pacote=filtros.pacote)
         if filtros.modalidade:
             filtro &= Q(inscricoes__modalidades=filtros.modalidade)
+        if filtros.sexo:
+            filtro &= Q(inscricoes__atleta__sexo=filtros.sexo)
         qs = Evento.objects.all()
         if filtros.evento:
             qs = qs.filter(pk=filtros.evento.pk)
-        qs = qs.annotate(total=Count("inscricoes", filter=filtro, distinct=True))
+        qs = qs.annotate(
+            total=Count("inscricoes", filter=filtro, distinct=True),
+            masc=Count("inscricoes", filter=filtro & Q(inscricoes__atleta__sexo="M"), distinct=True),
+            fem=Count("inscricoes", filter=filtro & Q(inscricoes__atleta__sexo="F"), distinct=True),
+        )
         for e in qs:
             rel.linhas.append([str(e), e.get_status_display(), _data(e.data_inicio), _data(e.data_fim),
-                               e.local or "—", e.total])
-        rel.rodape.append(f"Total de inscrições: {sum(l[5] for l in rel.linhas)}")
+                               e.local or "—", e.masc, e.fem, e.total])
+        rel.rodape.append(f"Total de inscrições: {sum(l[7] for l in rel.linhas)}")
 
     elif chave == "qtd_pacote":
         rel = Relatorio(chave, titulo, ["Pacote", "Evento", "Valor", "Status", "Atletas", "Receita estimada"],
@@ -178,6 +215,8 @@ def gerar(chave: str, filtros: Filtros, mostrar_cpf_completo: bool = False) -> R
         filtro = Q()
         if filtros.modalidade:
             filtro &= Q(inscricoes__modalidades=filtros.modalidade)
+        if filtros.sexo:
+            filtro &= Q(inscricoes__atleta__sexo=filtros.sexo)
         qs = Pacote.objects.select_related("evento")
         if filtros.evento:
             qs = qs.filter(evento=filtros.evento)
@@ -192,14 +231,15 @@ def gerar(chave: str, filtros: Filtros, mostrar_cpf_completo: bool = False) -> R
         rel.rodape.append(f"Total de atletas: {sum(l[4] for l in rel.linhas)} · Receita estimada: {_moeda(receita)}")
 
     else:  # relacao
-        rel = Relatorio(chave, titulo, ["Atleta", "CPF", "E-mail", "Telefone", "Evento", "Pacote", "Valor",
-                                        "Modalidades", "Consentimento LGPD"])
+        rel = Relatorio(chave, titulo, ["Atleta", "Sexo", "CPF", "E-mail", "Telefone", "Evento", "Pacote", "Valor",
+                                        "Disputas (modalidade e naipe)", "Consentimento LGPD"])
         ids_atletas = set()
         for i in filtros.inscricoes().order_by("atleta__nome", "evento__nome"):
             a = i.atleta
             ids_atletas.add(a.pk)
-            rel.linhas.append([a.nome, cpf(a), a.email, a.telefone or "—", str(i.evento), i.pacote.nome,
-                               _moeda(i.pacote.valor), nomes_modalidades(i), "Sim" if a.consentimento_lgpd else "Não"])
+            rel.linhas.append([a.nome, _sexo(a), cpf(a), a.email, a.telefone or "—", str(i.evento), i.pacote.nome,
+                               _moeda(i.pacote.valor), ", ".join(i.disputas()),
+                               "Sim" if a.consentimento_lgpd else "Não"])
         rel.rodape.append(
             f"Atletas distintos: {len(ids_atletas)} · Inscrições: {len(rel.linhas)}"
         )

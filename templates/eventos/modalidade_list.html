@@ -15,15 +15,20 @@
     <option value="">Todos os tipos</option>
     {% for v, r in tipos %}<option value="{{ v }}" {% if request.GET.tipo == v %}selected{% endif %}>{{ r }}</option>{% endfor %}
   </select>
+  <select name="naipe" class="form-select w-auto">
+    <option value="">Todos os naipes</option>
+    {% for v, r in naipes %}<option value="{{ v }}" {% if request.GET.naipe == v %}selected{% endif %}>{{ r }}</option>{% endfor %}
+  </select>
 </form>
 <div class="card tabela-card"><div class="table-responsive">
   <table class="table table-hover tabela-pilha">
-    <thead><tr><th>Modalidade</th><th>Tipo</th><th>Status</th><th class="text-end">Eventos</th><th class="text-end">Participantes</th><th></th></tr></thead>
+    <thead><tr><th>Modalidade</th><th>Tipo</th><th>Naipe</th><th>Status</th><th class="text-end">Eventos</th><th class="text-end">Participantes</th><th></th></tr></thead>
     <tbody>
     {% for m in modalidades %}
       <tr>
         <td class="principal"><span class="fw-semibold">{{ m.nome }}</span>{% if m.descricao %}<br><small class="text-muted">{{ m.descricao|truncatechars:80 }}</small>{% endif %}</td>
         <td data-rotulo="Tipo">{{ m.get_tipo_display }}</td>
+        <td data-rotulo="Naipe"><span class="chip naipe-{{ m.naipe }}" title="{{ m.get_naipe_display }}">{{ m.naipe_curto }}</span></td>
         <td data-rotulo="Status">{% if m.ativa %}<span class="badge text-bg-success">Ativa</span>{% else %}<span class="badge text-bg-secondary">Inativa</span>{% endif %}</td>
         <td data-rotulo="Eventos" class="text-end">{{ m.n_eventos }}</td>
         <td data-rotulo="Participantes" class="text-end">{{ m.n_participantes }}</td>
@@ -37,7 +42,7 @@
           {% endif %}
         </td>
       </tr>
-    {% empty %}<tr><td colspan="6"><div class="vazio"><i class="bi bi-dribbble"></i>Nenhuma modalidade encontrada.</div></td></tr>{% endfor %}
+    {% empty %}<tr><td colspan="7"><div class="vazio"><i class="bi bi-dribbble"></i>Nenhuma modalidade encontrada.</div></td></tr>{% endfor %}
     </tbody>
   </table>
 </div></div>

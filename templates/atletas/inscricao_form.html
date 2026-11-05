@@ -4,8 +4,14 @@
 <div class="cabecalho"><div>
   <nav class="breadcrumb"><a href="{% url 'atletas:lista' %}">Atletas</a>&nbsp;/&nbsp;<a href="{{ atleta.get_absolute_url }}">{{ atleta }}</a></nav>
   <h1>{% if inscricao %}Editar inscrição{% else %}Nova inscrição{% endif %}</h1>
-  <p class="sub">{{ atleta.nome }} · <span class="cpf">{% cpf atleta %}</span></p>
+  <p class="sub">{{ atleta.nome }} · <span class="cpf">{% cpf atleta %}</span> · {{ atleta.get_sexo_display|default:"sexo não informado" }}</p>
 </div></div>
+{% if not atleta.sexo %}
+<div class="alert alert-warning d-flex flex-wrap justify-content-between align-items-center gap-2">
+  <span><i class="bi bi-exclamation-triangle"></i> O sexo deste atleta não foi informado. Ele é necessário para definir o naipe das disputas.</span>
+  {% if perms.atletas.change_atleta %}<a class="btn btn-sm btn-dark" href="{% url 'atletas:editar' atleta.pk %}">Informar sexo</a>{% endif %}
+</div>
+{% endif %}
 <form method="post" class="card" novalidate>{% csrf_token %}
   <div class="card-body">{% include "atletas/_inscricao_campos.html" %}</div>
   <div class="card-footer bg-transparent d-flex gap-2 py-3">

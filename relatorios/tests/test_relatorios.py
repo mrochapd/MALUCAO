@@ -42,6 +42,23 @@ class RelatoriosTests(TestCase):
         from atletas.models import Inscricao
 
         r = self.client.get("/relatorios/", {"tipo": "qtd_modalidade"})
-        total = sum(l[3] for l in r.context["rel"].linhas)
+        linhas = r.context["rel"].linhas
         esperado = sum(i.modalidades.count() for i in Inscricao.objects.all())
-        self.assertEqual(total, esperado)
+        self.assertEqual(sum(l[5] for l in linhas), esperado)
+        self.assertEqual(sum(l[3] + l[4] for l in linhas), esperado)  # masculino + feminino = total
+
+    def test_relatorio_por_modalidade_separa_naipes(self):
+        from atletas.models import Atleta, Inscricao
+        from eventos.models import Modalidade
+
+        futsal = Modalidade.objects.get(nome="Futsal")
+        insc = Inscricao.objects.first()
+        for sexo, cpf in (("M", "52998224725"), ("F", "11144477735")):
+            a = Atleta.objects.create(nome=f"Teste {sexo} Naipe", cpf=cpf, sexo=sexo, email=f"{sexo}@x.com")
+            Inscricao.objects.create(atleta=a, evento=insc.evento, pacote=insc.pacote).modalidades.set([futsal])
+        r = self.client.get("/relatorios/", {"tipo": "por_modalidade", "modalidade": futsal.pk})
+        grupos = [g for g, _ in r.context["rel"].grupos]
+        self.assertIn("Futsal Masculino", grupos)
+        self.assertIn("Futsal Feminino", grupos)
+        r = self.client.get("/relatorios/", {"tipo": "inscritos", "sexo": "F"})
+        self.assertTrue(all(l[1] == "Feminino" for l in r.context["rel"].linhas))

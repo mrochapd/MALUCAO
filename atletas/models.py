@@ -7,10 +7,18 @@ from eventos.models import Evento, Modalidade, Pacote
 
 
 class Atleta(models.Model):
+    class Sexo(models.TextChoices):
+        MASCULINO = "M", "Masculino"
+        FEMININO = "F", "Feminino"
+
     nome = models.CharField("nome completo", max_length=200)
     cpf = models.CharField(
         "CPF", max_length=11, unique=True, validators=[validar_cpf],
         error_messages={"unique": "Já existe um atleta cadastrado com este CPF."},
+    )
+    sexo = models.CharField(
+        "sexo", max_length=1, choices=Sexo.choices, blank=True,
+        help_text="Define em qual naipe (masculino/feminino) o atleta compete, conforme o regulamento.",
     )
     email = models.EmailField("e-mail")
     telefone = models.CharField("telefone / WhatsApp", max_length=20, blank=True)
@@ -53,6 +61,10 @@ class Atleta(models.Model):
     def cpf_mascarado(self):
         return mascarar_cpf(self.cpf)
 
+    @property
+    def sexo_curto(self):
+        return self.sexo or "—"
+
 
 class Inscricao(models.Model):
     """Vínculo de um atleta com um evento: pacote adquirido + modalidades escolhidas."""
@@ -82,15 +94,26 @@ class Inscricao(models.Model):
     def get_absolute_url(self):
         return reverse("atletas:detalhe", args=[self.atleta_id])
 
+    def disputas(self) -> list[str]:
+        """Nome de cada disputa com o naipe do atleta, ex.: ["Futsal Masculino", "Xadrez (misto)"]."""
+        return sorted(m.nome_naipe(self.atleta.sexo) for m in self.modalidades.all())
+
     def clean(self):
         if self.pacote_id and self.evento_id and self.pacote.evento_id != self.evento_id:
             raise ValidationError({"pacote": "O pacote selecionado não pertence a este evento."})
 
     @staticmethod
-    def validar_modalidades(evento: Evento, pacote: Pacote | None, modalidades) -> list[str]:
+    def validar_modalidades(evento: Evento, pacote: Pacote | None, modalidades, sexo: str | None = None) -> list[str]:
         """Regras de negócio da escolha de modalidades. Retorna a lista de erros encontrados."""
         erros = []
         modalidades = list(modalidades)
+        if sexo in ("M", "F"):
+            incompativeis = [m.nome for m in modalidades if not m.aceita_sexo(sexo)]
+            if incompativeis:
+                rotulo = "masculino" if sexo == "M" else "feminino"
+                erros.append(
+                    f"Modalidade(s) não disputada(s) no naipe {rotulo}: {', '.join(incompativeis)} (ver regulamento)."
+                )
         disponiveis = set(evento.modalidades_ativas().values_list("pk", flat=True))
         fora = [m.nome for m in modalidades if m.pk not in disponiveis]
         if fora:

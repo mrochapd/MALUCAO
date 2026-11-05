@@ -214,3 +214,12 @@ main.pagina { padding: 1.75rem 2rem 3rem; flex: 1; max-width: 1400px; width: 100
   .stat-valor { font-size: 1.8rem; }
   .stat-rotulo { font-size: .72rem; letter-spacing: .04em; }
 }
+
+/* Sexo e naipe */
+.opcao-sexo label { min-width: 150px; font-weight: 600; }
+.chip.sexo-M { background: #e7f0ff; color: #1d4ed8; }
+.chip.sexo-F { background: #fde8f3; color: #be185d; }
+.chip.naipe-masculino { background: #e7f0ff; color: #1d4ed8; }
+.chip.naipe-feminino { background: #fde8f3; color: #be185d; }
+.chip.naipe-dupla_mista, .chip.naipe-misto { background: #f3e8ff; color: #7e22ce; }
+.opcao-check .bloqueio { color: #c1121f; font-size: .72rem; margin-left: auto; }

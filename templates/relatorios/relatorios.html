@@ -12,10 +12,11 @@
 </div>
 <form class="card card-body mb-3 filtros no-print" method="get" data-autoenvio>
   <div class="row g-2">
-    <div class="col-lg-4"><label class="form-label small" for="{{ form.tipo.id_for_label }}">Relatório</label>{{ form.tipo }}</div>
-    <div class="col-md-4 col-lg-3"><label class="form-label small" for="{{ form.evento.id_for_label }}">Evento</label>{{ form.evento }}</div>
-    <div class="col-md-4 col-lg-3"><label class="form-label small" for="{{ form.pacote.id_for_label }}">Pacote</label>{{ form.pacote }}</div>
-    <div class="col-md-4 col-lg-2"><label class="form-label small" for="{{ form.modalidade.id_for_label }}">Modalidade</label>{{ form.modalidade }}</div>
+    <div class="col-lg-6"><label class="form-label small" for="{{ form.tipo.id_for_label }}">Relatório</label>{{ form.tipo }}</div>
+    <div class="col-lg-6"><label class="form-label small" for="{{ form.evento.id_for_label }}">Evento</label>{{ form.evento }}</div>
+    <div class="col-md-4"><label class="form-label small" for="{{ form.pacote.id_for_label }}">Pacote</label>{{ form.pacote }}</div>
+    <div class="col-md-4"><label class="form-label small" for="{{ form.modalidade.id_for_label }}">Modalidade</label>{{ form.modalidade }}</div>
+    <div class="col-md-4"><label class="form-label small" for="{{ form.sexo.id_for_label }}">Sexo</label>{{ form.sexo }}</div>
   </div>
   <noscript><button class="btn btn-dark mt-2">Gerar</button></noscript>
 </form>

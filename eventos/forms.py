@@ -9,7 +9,7 @@ from .models import Evento, Modalidade, Pacote
 class ModalidadeForm(BootstrapFormMixin, forms.ModelForm):
     class Meta:
         model = Modalidade
-        fields = ["nome", "tipo", "descricao", "ativa"]
+        fields = ["nome", "tipo", "naipe", "descricao", "ativa"]
         widgets = {"descricao": forms.Textarea(attrs={"rows": 3})}
 
 

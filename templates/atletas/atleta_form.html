@@ -35,6 +35,14 @@
           <span><a data-link class="btn btn-sm btn-dark" href="#">Abrir cadastro</a> <a data-link-inscricao class="btn btn-sm btn-primary" href="#">Adicionar inscrição</a></span>
         </div>
       </div>
+      <div class="col-12 mb-3 {% if form.sexo.errors %}campo-erro{% endif %}">
+        <span class="form-label d-block">Sexo <span class="text-danger">*</span></span>
+        <div class="d-flex flex-wrap gap-2" role="radiogroup" aria-label="Sexo">
+          {% for op in form.sexo %}<div class="opcao-check opcao-sexo"><label for="{{ op.id_for_label }}">{{ op.tag }} <span>{{ op.choice_label }}</span></label></div>{% endfor %}
+        </div>
+        <div class="form-text">{{ form.sexo.help_text }} Modalidades exclusivas de um sexo ficam bloqueadas para o outro.</div>
+        {{ form.sexo.errors }}
+      </div>
       <div class="col-md-6">{% include "includes/campo.html" with campo=form.email %}</div>
       <div class="col-md-6">{% include "includes/campo.html" with campo=form.telefone %}</div>
       <div class="col-12">{% include "includes/campo.html" with campo=form.observacoes %}</div>

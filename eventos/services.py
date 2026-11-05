@@ -14,7 +14,7 @@ def opcoes_por_evento(incluir_ids_pacote=(), incluir_ids_modalidade=()):
     eventos = Evento.objects.prefetch_related("modalidades", "pacotes__modalidades_permitidas")
     for evento in eventos:
         modalidades = [
-            {"id": m.pk, "nome": m.nome, "tipo": m.get_tipo_display()}
+            {"id": m.pk, "nome": m.nome, "tipo": m.get_tipo_display(), "naipe": m.naipe, "naipe_txt": m.naipe_curto}
             for m in evento.modalidades.all()
             if m.ativa or m.pk in incluir_ids_modalidade
         ]

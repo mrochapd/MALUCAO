@@ -36,6 +36,6 @@ class AuditoriaTests(TestCase):
     def test_registra_usuario_da_requisicao(self):
         u = User.objects.create_superuser("chefe", "c@x.com", "Senha-forte-123")
         self.client.force_login(u)
-        self.client.post("/eventos/modalidades/nova/", {"nome": "Queimada", "tipo": "coletiva", "ativa": "on"})
+        self.client.post("/eventos/modalidades/nova/", {"nome": "Queimada", "tipo": "coletiva", "naipe": "misto", "ativa": "on"})
         log = RegistroAlteracao.objects.get(entidade="Modalidade", acao="criacao", objeto_repr="Queimada")
         self.assertEqual(log.usuario, u)

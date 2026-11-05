@@ -87,6 +87,17 @@
     const avisoEvento = raiz.querySelector("[data-aviso-evento]");
     const regra = raiz.querySelector("[data-regra]");
     const passos = raiz.querySelectorAll("[data-depende-evento]");
+    const avisoSexo = raiz.querySelector("[data-aviso-sexo]");
+    // sexo: do próprio formulário (cadastro) ou do atleta já cadastrado (data-sexo)
+    const radiosSexo = document.querySelectorAll('input[name="sexo"]');
+    const sexoAtual = () => {
+      const marcado = [...radiosSexo].find((r) => r.checked);
+      return marcado ? marcado.value : (raiz.dataset.sexo || "");
+    };
+    radiosSexo.forEach((r) => r.addEventListener("change", () => renderModalidades()));
+    const aceitaSexo = (m, sexo) =>
+      !sexo || (m.naipe === "masculino" ? sexo === "M" : m.naipe === "feminino" ? sexo === "F" : true);
+    const bloqueio = (m) => (m.naipe === "masculino" ? "Só masculino" : "Só feminino");
     const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
     // guarda as marcações atuais antes de reconstruir a lista
@@ -139,14 +150,23 @@
       const pac = pacoteInfo();
       const permitidas = pac && pac.permitidas.length ? new Set(pac.permitidas.map(String)) : null;
       const lista = ev.modalidades.filter((m) => !permitidas || permitidas.has(String(m.id)));
+      const sexo = sexoAtual();
+      if (avisoSexo) avisoSexo.hidden = Boolean(sexo);
+      // desmarca o que não vale para o sexo escolhido
+      lista.forEach((m) => { if (!aceitaSexo(m, sexo)) selecionadas.delete(String(m.id)); });
       if (!lista.length) {
         boxModalidades.innerHTML = '<p class="text-muted mb-0">Nenhuma modalidade disponível para este evento/pacote.</p>';
       } else {
-        boxModalidades.innerHTML = '<div class="grade-checks">' + lista.map((m) => `
-          <div class="opcao-check"><label>
-            <input class="form-check-input" type="checkbox" name="${prefixo}modalidades" value="${m.id}" ${selecionadas.has(String(m.id)) ? "checked" : ""}>
-            <span>${esc(m.nome)}</span><small>${esc(m.tipo)}</small>
-          </label></div>`).join("") + "</div>";
+        boxModalidades.innerHTML = '<div class="grade-checks">' + lista.map((m) => {
+          const ok = aceitaSexo(m, sexo);
+          return `
+          <div class="opcao-check"><label title="${esc(m.tipo)} · ${esc(m.naipe_txt)}">
+            <input class="form-check-input" type="checkbox" name="${prefixo}modalidades" value="${m.id}"
+              ${selecionadas.has(String(m.id)) ? "checked" : ""} ${ok ? "" : "disabled data-bloqueada"}>
+            <span>${esc(m.nome)}</span>
+            ${ok ? `<small>${esc(m.naipe_txt)}</small>` : `<small class="bloqueio">${bloqueio(m)}</small>`}
+          </label></div>`;
+        }).join("") + "</div>";
       }
       aplicarRegras();
     }
@@ -156,7 +176,7 @@
       const caixas = boxModalidades.querySelectorAll('input[type="checkbox"]');
       const marcadas = [...caixas].filter((c) => c.checked).length;
       const max = pac && pac.max ? pac.max : null;
-      caixas.forEach((c) => (c.disabled = max !== null && !c.checked && marcadas >= max));
+      caixas.forEach((c) => (c.disabled = c.hasAttribute("data-bloqueada") || (max !== null && !c.checked && marcadas >= max)));
       if (regra) {
         regra.textContent = max ? `${marcadas} de ${max} modalidade(s) selecionada(s) — limite do pacote.`
                                 : `${marcadas} modalidade(s) selecionada(s).`;

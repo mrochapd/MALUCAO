@@ -17,8 +17,9 @@ class AtletaForm(BootstrapFormMixin, forms.ModelForm):
 
     class Meta:
         model = Atleta
-        fields = ["nome", "cpf", "email", "telefone", "consentimento_lgpd", "observacoes"]
+        fields = ["nome", "cpf", "sexo", "email", "telefone", "consentimento_lgpd", "observacoes"]
         widgets = {
+            "sexo": forms.RadioSelect,
             "observacoes": forms.Textarea(attrs={"rows": 2}),
             "telefone": forms.TextInput(attrs={"inputmode": "tel", "placeholder": "(33) 90000-0000"}),
             "email": forms.EmailInput(attrs={"placeholder": "nome@exemplo.com"}),
@@ -27,6 +28,9 @@ class AtletaForm(BootstrapFormMixin, forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.atleta_existente = None
+        self.fields["sexo"].required = True
+        self.fields["sexo"].choices = Atleta.Sexo.choices
+        self.fields["sexo"].error_messages["required"] = "Informe o sexo do atleta (define o naipe das disputas)."
         if self.instance.pk:
             self.initial["cpf"] = formatar_cpf(self.instance.cpf)
 
@@ -79,9 +83,11 @@ class InscricaoForm(BootstrapFormMixin, forms.ModelForm):
         }
         labels = {"pacote": "Pacote adquirido", "modalidades": "Modalidades"}
 
-    def __init__(self, *args, atleta=None, usuario=None, obrigatoria=True, **kwargs):
+    def __init__(self, *args, atleta=None, usuario=None, obrigatoria=True, sexo=None, **kwargs):
         super().__init__(*args, **kwargs)
         self.atleta = atleta if atleta is not None else (self.instance.atleta if self.instance.pk else None)
+        # sexo do atleta: informado no mesmo formulário (cadastro) ou já gravado no atleta
+        self.sexo = sexo if sexo is not None else (self.atleta.sexo if self.atleta is not None else "")
         self.usuario = usuario
         self.obrigatoria = obrigatoria
         inst = self.instance if self.instance.pk else None
@@ -137,7 +143,10 @@ class InscricaoForm(BootstrapFormMixin, forms.ModelForm):
 
         if not modalidades:
             self.add_error("modalidades", "Marque ao menos uma modalidade.")
-        for erro in Inscricao.validar_modalidades(evento, pacote, modalidades):
+        if self.sexo not in ("M", "F") and self.atleta is not None:
+            self.add_error(None, "Informe o sexo do atleta no cadastro antes de escolher as modalidades: "
+                                 "ele define o naipe (masculino/feminino) de cada disputa.")
+        for erro in Inscricao.validar_modalidades(evento, pacote, modalidades, self.sexo):
             self.add_error("modalidades", erro)
         return dados
 
@@ -158,6 +167,7 @@ class FiltroAtletasForm(BootstrapFormMixin, forms.Form):
     pacote = forms.ModelChoiceField(Pacote.objects.select_related("evento"), required=False,
                                     empty_label="Todos os pacotes")
     modalidade = forms.ModelChoiceField(Modalidade.objects.all(), required=False, empty_label="Todas as modalidades")
+    sexo = forms.ChoiceField(choices=[("", "Ambos os sexos")] + list(Atleta.Sexo.choices), required=False)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

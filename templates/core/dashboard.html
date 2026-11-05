@@ -26,7 +26,8 @@
 <div class="row g-3 mb-3">
   <div class="col-6 col-xl-3"><div class="card stat escuro"><div class="card-body">
     <div class="icone"><i class="bi bi-people-fill"></i></div>
-    <div><div class="stat-valor">{{ total_atletas }}</div><div class="stat-rotulo">Atletas {% if evento_filtro %}no evento{% else %}cadastrados{% endif %}</div></div>
+    <div><div class="stat-valor">{{ total_atletas }}</div><div class="stat-rotulo">Atletas {% if evento_filtro %}no evento{% else %}cadastrados{% endif %}</div>
+      <div class="small mt-1 text-white-50">{{ atletas_masc }} masc. · {{ atletas_fem }} fem.{% if atletas_sem_sexo %} · <span class="text-warning">{{ atletas_sem_sexo }} sem sexo</span>{% endif %}</div></div>
   </div></div></div>
   <div class="col-6 col-xl-3"><div class="card stat"><div class="card-body">
     <div class="icone"><i class="bi bi-card-checklist"></i></div>
@@ -111,7 +112,7 @@
               <td class="principal"><a href="{% url 'atletas:detalhe' i.atleta_id %}" class="fw-semibold text-reset">{{ i.atleta.nome }}</a></td>
               <td data-rotulo="Evento">{{ i.evento }}</td>
               <td data-rotulo="Pacote"><span class="chip vermelho">{{ i.pacote.nome }}</span></td>
-              <td data-rotulo="Modalidades">{% for m in i.modalidades.all %}<span class="chip">{{ m.nome }}</span>{% endfor %}</td>
+              <td data-rotulo="Modalidades">{% for d in i.disputas %}<span class="chip">{{ d }}</span>{% endfor %}</td>
               <td data-rotulo="Data" class="text-nowrap">{{ i.criado_em|date:"d/m/Y H:i" }}</td>
             </tr>
           {% empty %}

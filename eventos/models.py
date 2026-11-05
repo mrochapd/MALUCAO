@@ -10,9 +10,20 @@ class Modalidade(models.Model):
         DUPLA = "dupla", "Dupla"
         COLETIVA = "coletiva", "Coletiva"
 
+    class Naipe(models.TextChoices):
+        MASC_FEM = "masc_fem", "Masculino e feminino (disputas separadas)"
+        MASCULINO = "masculino", "Somente masculino"
+        FEMININO = "feminino", "Somente feminino"
+        MISTO = "misto", "Misto (aberto a qualquer sexo)"
+        DUPLA_MISTA = "dupla_mista", "Dupla/equipe mista (exige homens e mulheres)"
+
     nome = models.CharField("nome da modalidade", max_length=100, unique=True)
     descricao = models.TextField("descrição", blank=True)
     tipo = models.CharField("categoria / tipo", max_length=20, choices=Tipo.choices, default=Tipo.COLETIVA)
+    naipe = models.CharField(
+        "naipe", max_length=20, choices=Naipe.choices, default=Naipe.MASC_FEM,
+        help_text="Define quem pode disputar: separado por sexo, exclusivo de um sexo, misto ou dupla mista.",
+    )
     ativa = models.BooleanField("ativa", default=True)
     criado_em = models.DateTimeField(auto_now_add=True)
     atualizado_em = models.DateTimeField(auto_now=True)
@@ -27,6 +38,41 @@ class Modalidade(models.Model):
 
     def get_absolute_url(self):
         return reverse("eventos:modalidade_editar", args=[self.pk])
+
+    NAIPE_CURTO = {
+        "masc_fem": "Masc. e fem.",
+        "masculino": "Só masculino",
+        "feminino": "Só feminino",
+        "misto": "Misto",
+        "dupla_mista": "Dupla mista",
+    }
+
+    @property
+    def naipe_curto(self) -> str:
+        return self.NAIPE_CURTO.get(self.naipe, "")
+
+    @property
+    def separa_por_sexo(self) -> bool:
+        """Modalidades com disputas separadas (ou exclusivas) por sexo."""
+        return self.naipe in {self.Naipe.MASC_FEM, self.Naipe.MASCULINO, self.Naipe.FEMININO}
+
+    def aceita_sexo(self, sexo: str) -> bool:
+        """M/F. Retorna False quando a modalidade é exclusiva do outro sexo."""
+        if self.naipe == self.Naipe.MASCULINO:
+            return sexo == "M"
+        if self.naipe == self.Naipe.FEMININO:
+            return sexo == "F"
+        return True
+
+    def nome_naipe(self, sexo: str) -> str:
+        """Nome da disputa em que o atleta compete, ex.: “Futsal Feminino”."""
+        if self.separa_por_sexo and sexo in ("M", "F"):
+            return f"{self.nome} {'Masculino' if sexo == 'M' else 'Feminino'}"
+        if self.naipe == self.Naipe.DUPLA_MISTA:
+            return f"{self.nome} (dupla mista)"
+        if self.naipe == self.Naipe.MISTO:
+            return f"{self.nome} (misto)"
+        return self.nome
 
 
 class EventoQuerySet(models.QuerySet):

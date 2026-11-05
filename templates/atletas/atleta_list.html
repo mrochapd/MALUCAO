@@ -10,34 +10,36 @@
 </div>
 <form class="card card-body mb-3 filtros" method="get">
   <div class="row g-2">
-    <div class="col-lg-4">{{ filtro.q }}</div>
-    <div class="col-md-4 col-lg-3">{{ filtro.evento }}</div>
-    <div class="col-md-4 col-lg-2">{{ filtro.pacote }}</div>
-    <div class="col-md-4 col-lg-2">{{ filtro.modalidade }}</div>
+    <div class="col-lg-3">{{ filtro.q }}</div>
+    <div class="col-md-6 col-lg-3">{{ filtro.evento }}</div>
+    <div class="col-md-6 col-lg-2">{{ filtro.pacote }}</div>
+    <div class="col-md-6 col-lg-2">{{ filtro.modalidade }}</div>
+    <div class="col-md-6 col-lg-1">{{ filtro.sexo }}</div>
     <div class="col-lg-1 d-grid"><button class="btn btn-dark" aria-label="Buscar"><i class="bi bi-search"></i></button></div>
   </div>
   {% if request.GET %}<a href="{% url 'atletas:lista' %}" class="small mt-2">Limpar filtros</a>{% endif %}
 </form>
 <div class="card tabela-card"><div class="table-responsive">
   <table class="table table-hover tabela-pilha">
-    <thead><tr><th>Atleta</th><th>CPF</th><th>E-mail</th><th>Inscrições (evento · pacote · modalidades)</th><th></th></tr></thead>
+    <thead><tr><th>Atleta</th><th>Sexo</th><th>CPF</th><th>E-mail</th><th>Inscrições (evento · pacote · modalidades)</th><th></th></tr></thead>
     <tbody>
     {% for a in atletas %}
       <tr>
         <td class="principal"><a href="{{ a.get_absolute_url }}" class="fw-semibold text-reset">{{ a.nome }}</a></td>
+        <td data-rotulo="Sexo">{% if a.sexo %}<span class="chip sexo-{{ a.sexo }}" title="{{ a.get_sexo_display }}">{{ a.get_sexo_display }}</span>{% else %}<span class="text-danger small">Não informado</span>{% endif %}</td>
         <td data-rotulo="CPF" class="cpf">{% cpf a %}</td>
         <td data-rotulo="E-mail" class="text-break">{{ a.email }}</td>
         <td data-rotulo="Inscrições">
           {% for i in a.inscricoes.all %}
             <div class="mb-1"><span class="fw-semibold small">{{ i.evento }}</span> <span class="chip vermelho">{{ i.pacote.nome }}</span>
-            {% for m in i.modalidades.all %}<span class="chip">{{ m.nome }}</span>{% endfor %}</div>
+            {% for d in i.disputas %}<span class="chip">{{ d }}</span>{% endfor %}</div>
           {% empty %}<span class="text-muted small">Sem inscrição</span>{% endfor %}
         </td>
         <td class="text-end text-nowrap">
           <a class="btn btn-sm btn-outline-secondary" href="{{ a.get_absolute_url }}">Abrir</a>
         </td>
       </tr>
-    {% empty %}<tr><td colspan="5"><div class="vazio"><i class="bi bi-person-x"></i>Nenhum atleta encontrado.</div></td></tr>{% endfor %}
+    {% empty %}<tr><td colspan="6"><div class="vazio"><i class="bi bi-person-x"></i>Nenhum atleta encontrado.</div></td></tr>{% endfor %}
     </tbody>
   </table>
 </div>

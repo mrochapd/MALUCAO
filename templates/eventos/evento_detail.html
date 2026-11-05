@@ -41,7 +41,8 @@
   <div class="col-lg-4">
     <div class="card stat escuro compacto mb-3"><div class="card-body">
       <div class="icone"><i class="bi bi-people-fill"></i></div>
-      <div><div class="stat-valor">{{ total_inscritos }}</div><div class="stat-rotulo">Atletas inscritos</div></div>
+      <div><div class="stat-valor">{{ total_inscritos }}</div><div class="stat-rotulo">Atletas inscritos</div>
+        <div class="small mt-1 text-white-50">{{ por_sexo.M }} masculino · {{ por_sexo.F }} feminino</div></div>
     </div></div>
     {% if perms.eventos.add_evento %}
     <div class="card"><div class="card-header">Nova edição</div><div class="card-body">
@@ -85,7 +86,8 @@
     <div class="card h-100"><div class="card-header">Modalidades do evento</div><div class="card-body">
       <ul class="barras">
       {% for m in modalidades %}
-        <li><div class="linha"><span>{{ m.nome }} {% if not m.ativa %}<span class="badge text-bg-secondary">inativa</span>{% endif %}</span><strong>{{ m.n_participantes }}</strong></div>
+        <li><div class="linha"><span>{{ m.nome }} <small class="text-muted">· {{ m.naipe_curto }}</small> {% if not m.ativa %}<span class="badge text-bg-secondary">inativa</span>{% endif %}</span>
+          <span class="small text-muted text-nowrap">M {{ m.n_masc }} · F {{ m.n_fem }} · <strong class="text-body">{{ m.n_participantes }}</strong></span></div>
         <div class="trilho"><div class="barra" style="width: {% if total_inscritos %}{% widthratio m.n_participantes total_inscritos 100 %}{% else %}0{% endif %}%"></div></div></li>
       {% empty %}<li class="text-muted">Nenhuma modalidade vinculada. <a href="{% url 'eventos:evento_editar' object.pk %}">Vincular modalidades</a>.</li>{% endfor %}
       </ul>

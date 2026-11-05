@@ -17,6 +17,7 @@
     <div class="card mb-3"><div class="card-header">Dados pessoais</div><div class="card-body">
       <dl class="lista-info">
         <dt>CPF</dt><dd class="cpf">{% cpf object %}</dd>
+        <dt>Sexo</dt><dd>{% if object.sexo %}{{ object.get_sexo_display }}{% else %}<span class="text-danger">Não informado</span>{% endif %}</dd>
         <dt>E-mail</dt><dd class="text-break">{{ object.email }}</dd>
         <dt>Telefone</dt><dd>{{ object.telefone|default:"—" }}</dd>
         <dt>LGPD</dt><dd>{% if object.consentimento_lgpd %}<span class="text-success"><i class="bi bi-check-circle-fill"></i> Consentimento em {{ object.consentimento_em|date:"d/m/Y" }}</span>{% else %}<span class="text-danger"><i class="bi bi-exclamation-circle"></i> Sem consentimento registrado</span>{% endif %}</dd>
@@ -44,7 +45,7 @@
             </div>
           </div>
           <div class="mt-2"><span class="chip vermelho">{{ i.pacote.nome }} · {{ i.pacote.valor|brl }}</span>
-            {% for m in i.modalidades.all %}<span class="chip">{{ m.nome }}</span>{% empty %}<span class="text-muted small">Nenhuma modalidade</span>{% endfor %}</div>
+            {% for d in i.disputas %}<span class="chip">{{ d }}</span>{% empty %}<span class="text-muted small">Nenhuma modalidade</span>{% endfor %}</div>
           {% if i.observacoes %}<p class="small text-muted mb-0 mt-2">{{ i.observacoes }}</p>{% endif %}
         </div>
       {% empty %}

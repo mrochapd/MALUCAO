@@ -28,7 +28,7 @@ class Base(TestCase):
         cls.consulta.groups.add(Group.objects.get(name="Consulta"))
 
     def dados(self, **extra):
-        d = {"nome": "Maria da Silva", "cpf": CPF, "email": "Maria@Exemplo.com", "consentimento_lgpd": "on",
+        d = {"nome": "Maria da Silva", "cpf": CPF, "sexo": "F", "email": "Maria@Exemplo.com", "consentimento_lgpd": "on",
              "insc-evento": self.juv.pk, "insc-pacote": self.atleta_pac.pk, "insc-modalidades": [self.futsal.pk]}
         d.update(extra)
         return d
@@ -125,6 +125,48 @@ class CadastroAtletaTests(Base):
         self.assertContains(self.client.get(reverse("atletas:lista"), {"q": "maria"}), "Maria da Silva")
         self.assertContains(self.client.get(reverse("atletas:lista"), {"q": "529982"}), "Maria da Silva")
         self.assertNotContains(self.client.get(reverse("atletas:lista"), {"q": "zzz"}), "Maria da Silva")
+
+
+class SexoNaipeTests(Base):
+    """Regras de sexo/naipe do regulamento da JUV."""
+
+    def setUp(self):
+        self.client.force_login(self.operador)
+        self.fut7 = Modalidade.objects.get(nome="Fut7")          # Futebol Society: só masculino
+        self.sinuca = Modalidade.objects.get(nome="Sinuca")      # dupla mista
+
+    def test_sexo_obrigatorio(self):
+        r = self.client.post(reverse("atletas:novo"), self.dados(sexo=""))
+        self.assertContains(r, "Informe o sexo do atleta")
+        self.assertFalse(Atleta.objects.exists())
+
+    def test_atleta_feminina_nao_entra_em_modalidade_so_masculina(self):
+        r = self.client.post(reverse("atletas:novo"), self.dados(**{"insc-modalidades": [self.fut7.pk]}))
+        self.assertContains(r, "não disputada(s) no naipe feminino")
+        self.assertFalse(Atleta.objects.exists())
+
+    def test_atleta_masculino_entra_em_modalidade_so_masculina(self):
+        self.client.post(reverse("atletas:novo"), self.dados(sexo="M", **{"insc-modalidades": [self.fut7.pk]}))
+        self.assertEqual(Atleta.objects.get().sexo, "M")
+
+    def test_modalidades_mistas_aceitam_ambos_os_sexos(self):
+        mods = [self.sinuca.pk, self.xadrez.pk, self.futsal.pk]
+        self.client.post(reverse("atletas:novo"), self.dados(**{"insc-modalidades": mods}))
+        insc = Atleta.objects.get().inscricoes.get()
+        self.assertEqual(insc.disputas(), ["Futsal Feminino", "Sinuca (dupla mista)", "Xadrez (misto)"])
+
+    def test_inscricao_de_atleta_sem_sexo_pede_atualizacao(self):
+        atleta = Atleta.objects.create(nome="Sem Sexo Teste", cpf=CPF, email="s@x.com")
+        r = self.client.post(reverse("atletas:inscricao_nova", args=[atleta.pk]),
+                             {"evento": self.juv.pk, "pacote": self.atleta_pac.pk, "modalidades": [self.futsal.pk]})
+        self.assertContains(r, "Informe o sexo do atleta no cadastro")
+        self.assertFalse(atleta.inscricoes.exists())
+
+    def test_filtro_por_sexo(self):
+        Atleta.objects.create(nome="Ana Teste", cpf=CPF, sexo="F", email="a@x.com")
+        r = self.client.get(reverse("atletas:lista"), {"sexo": "M"})
+        self.assertNotContains(r, "Ana Teste")
+        self.assertContains(self.client.get(reverse("atletas:lista"), {"sexo": "F"}), "Ana Teste")
 
 
 class PermissoesTests(Base):

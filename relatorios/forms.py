@@ -12,6 +12,8 @@ class FiltroRelatorioForm(BootstrapFormMixin, forms.Form):
     pacote = forms.ModelChoiceField(Pacote.objects.select_related("evento"), required=False,
                                     empty_label="Todos os pacotes")
     modalidade = forms.ModelChoiceField(Modalidade.objects.all(), required=False, empty_label="Todas as modalidades")
+    sexo = forms.ChoiceField(label="Sexo", required=False,
+                             choices=[("", "Ambos os sexos"), ("M", "Masculino"), ("F", "Feminino")])
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
